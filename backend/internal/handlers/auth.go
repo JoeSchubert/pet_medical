@@ -1,0 +1,277 @@
+package handlers
+
+import (
+	"encoding/json"
+	"log"
+	"net/http"
+	"strings"
+	"time"
+
+	"github.com/pet-medical/api/internal/auth"
+	"github.com/pet-medical/api/internal/debuglog"
+	"github.com/pet-medical/api/internal/i18n"
+	"github.com/pet-medical/api/internal/middleware"
+	"github.com/pet-medical/api/internal/models"
+	"gorm.io/gorm"
+)
+
+const (
+	refreshCookieName = "refresh_token"
+	accessCookieName  = "access_token"
+)
+
+type AuthHandler struct {
+	DB                *gorm.DB
+	JWT               *auth.JWT
+	RefreshStore      *auth.RefreshStore
+	DefaultWeightUnit string
+	DefaultCurrency   string
+	DefaultLanguage   string
+	SecureCookies     bool // when true, set Secure flag on cookies (use with HTTPS)
+}
+
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type LoginResponse struct {
+	AccessToken string  `json:"access_token"`
+	ExpiresIn   int     `json:"expires_in"`
+	User        UserDTO `json:"user"`
+}
+
+type UserDTO struct {
+	ID          string `json:"id"`
+	DisplayName string `json:"display_name"`
+	Email       string `json:"email"`
+	Role       string `json:"role"`
+	WeightUnit string `json:"weight_unit,omitempty"`
+	Currency   string `json:"currency,omitempty"`
+	Language   string `json:"language,omitempty"`
+}
+
+type RefreshResponse struct {
+	AccessToken string  `json:"access_token"`
+	ExpiresIn   int     `json:"expires_in"`
+	User        UserDTO `json:"user"`
+}
+
+func (h *AuthHandler) applyUserDefaults(u *models.User) {
+	if u.WeightUnit == "" || (u.WeightUnit != "lbs" && u.WeightUnit != "kg") {
+		u.WeightUnit = h.DefaultWeightUnit
+	}
+	if u.Currency == "" {
+		u.Currency = h.DefaultCurrency
+	}
+	if u.Language == "" {
+		u.Language = h.DefaultLanguage
+	}
+}
+
+func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+	log.Print(i18n.Tf("log.auth.login_request", r.Method))
+	debuglog.Debugf("login: method=%s", r.Method)
+	if r.Method != http.MethodPost {
+		log.Print(i18n.T("log.auth.login_rejected_method"))
+		http.Error(w, `{"error":"error.method_not_allowed"}`, http.StatusMethodNotAllowed)
+		return
+	}
+	var req LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Print(i18n.Tf("log.auth.login_decode_error", err))
+		http.Error(w, `{"error":"error.invalid_request"}`, http.StatusBadRequest)
+		return
+	}
+	log.Print(i18n.Tf("log.auth.login_attempt", req.Email))
+	if req.Email == "" || req.Password == "" {
+		log.Print(i18n.T("log.auth.login_rejected_missing"))
+		http.Error(w, `{"error":"error.email_password_required"}`, http.StatusBadRequest)
+		return
+	}
+
+	email := strings.TrimSpace(strings.ToLower(req.Email))
+	var u models.User
+	err := h.DB.Where("LOWER(email) = ?", email).First(&u).Error
+	if err != nil {
+		log.Print(i18n.Tf("log.auth.login_failed_not_found", req.Email, err))
+		http.Error(w, `{"error":"error.invalid_credentials"}`, http.StatusUnauthorized)
+		return
+	}
+	h.applyUserDefaults(&u)
+	if u.PasswordHash == "" {
+		log.Print(i18n.T("log.auth.login_rejected_missing"))
+		http.Error(w, `{"error":"error.invalid_credentials"}`, http.StatusUnauthorized)
+		return
+	}
+	if !auth.CheckPassword(u.PasswordHash, req.Password) {
+		log.Print(i18n.Tf("log.auth.login_failed_bad_password", req.Email))
+		http.Error(w, `{"error":"error.invalid_credentials"}`, http.StatusUnauthorized)
+		return
+	}
+
+	accessToken, err := h.JWT.NewAccessToken(u.ID, u.DisplayName, u.Email, u.Role)
+	if err != nil {
+		log.Print(i18n.Tf("log.auth.login_jwt_error", err))
+		http.Error(w, `{"error":"error.internal_error"}`, http.StatusInternalServerError)
+		return
+	}
+
+	expiresAt := time.Now().Add(h.JWT.RefreshTokenDuration())
+	refreshToken, err := h.RefreshStore.Create(u.ID, expiresAt)
+	if err != nil {
+		log.Print(i18n.Tf("log.auth.login_refresh_error", err))
+		http.Error(w, `{"error":"error.internal_error"}`, http.StatusInternalServerError)
+		return
+	}
+
+	h.setRefreshCookie(w, refreshToken, int(h.JWT.RefreshTokenDuration().Seconds()))
+	h.setAccessCookie(w, accessToken, 15*60)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(LoginResponse{
+		AccessToken: accessToken,
+		ExpiresIn:   int(h.JWT.RefreshTokenDuration().Minutes()),
+		User: UserDTO{
+			ID:          u.ID.String(),
+			DisplayName: u.DisplayName,
+			Email:       u.Email,
+			Role:       u.Role,
+			WeightUnit: u.WeightUnit,
+			Currency:   u.Currency,
+			Language:   u.Language,
+		},
+	})
+}
+
+func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie(refreshCookieName)
+	if err != nil || cookie.Value == "" {
+		http.Error(w, `{"error":"refresh token required"}`, http.StatusUnauthorized)
+		return
+	}
+	userID, err := h.RefreshStore.Consume(cookie.Value)
+	if err != nil {
+		clearRefreshCookie(w, h.SecureCookies)
+		http.Error(w, `{"error":"invalid or expired refresh token"}`, http.StatusUnauthorized)
+		return
+	}
+
+	var u models.User
+	err = h.DB.Where("id = ?", userID).First(&u).Error
+	if err != nil {
+		http.Error(w, `{"error":"user not found"}`, http.StatusUnauthorized)
+		return
+	}
+	h.applyUserDefaults(&u)
+
+	accessToken, err := h.JWT.NewAccessToken(u.ID, u.DisplayName, u.Email, u.Role)
+	if err != nil {
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		return
+	}
+
+	expiresAt := time.Now().Add(h.JWT.RefreshTokenDuration())
+	newRefresh, err := h.RefreshStore.Create(u.ID, expiresAt)
+	if err != nil {
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		return
+	}
+	h.setRefreshCookie(w, newRefresh, int(h.JWT.RefreshTokenDuration().Seconds()))
+	h.setAccessCookie(w, accessToken, 15*60)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(RefreshResponse{
+		AccessToken: accessToken,
+		ExpiresIn:   int(h.JWT.RefreshTokenDuration().Minutes()),
+		User: UserDTO{
+			ID:          u.ID.String(),
+			DisplayName: u.DisplayName,
+			Email:       u.Email,
+			Role:       u.Role,
+			WeightUnit: u.WeightUnit,
+			Currency:   u.Currency,
+			Language:   u.Language,
+		},
+	})
+}
+
+func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	clearRefreshCookie(w, h.SecureCookies)
+	clearAccessCookie(w, h.SecureCookies)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"message": "logged out"})
+}
+
+func (h *AuthHandler) setRefreshCookie(w http.ResponseWriter, token string, maxAge int) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     refreshCookieName,
+		Value:    token,
+		Path:     "/",
+		MaxAge:   maxAge,
+		HttpOnly: true,
+		Secure:   h.SecureCookies,
+		SameSite: http.SameSiteLaxMode,
+	})
+}
+
+func clearRefreshCookie(w http.ResponseWriter, secure bool) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     refreshCookieName,
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   secure,
+		SameSite: http.SameSiteLaxMode,
+	})
+}
+
+func (h *AuthHandler) setAccessCookie(w http.ResponseWriter, token string, maxAge int) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     accessCookieName,
+		Value:    token,
+		Path:     "/",
+		MaxAge:   maxAge,
+		HttpOnly: true,
+		Secure:   h.SecureCookies,
+		SameSite: http.SameSiteLaxMode,
+	})
+}
+
+func clearAccessCookie(w http.ResponseWriter, secure bool) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     accessCookieName,
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   secure,
+		SameSite: http.SameSiteLaxMode,
+	})
+}
+
+func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
+	u := middleware.GetUser(r.Context())
+	if u == nil {
+		http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+		return
+	}
+	debuglog.Debugf("auth/me: user_id=%s", u.ID.String())
+	var dbUser models.User
+	if err := h.DB.Where("id = ?", u.ID).First(&dbUser).Error; err != nil {
+		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		return
+	}
+	h.applyUserDefaults(&dbUser)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(UserDTO{
+		ID:          dbUser.ID.String(),
+		DisplayName: dbUser.DisplayName,
+		Email:       dbUser.Email,
+		Role:        dbUser.Role,
+		WeightUnit:  dbUser.WeightUnit,
+		Currency:    dbUser.Currency,
+		Language:    dbUser.Language,
+	})
+}

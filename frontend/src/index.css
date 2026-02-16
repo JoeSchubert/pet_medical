@@ -1,0 +1,1488 @@
+/* RobiPet-style dark theme */
+:root {
+  /* Dark palette */
+  --dark-primary: #0f0f23;
+  --dark-secondary: #16213e;
+  --dark-card: #1a1d3a;
+  --dark-card-hover: #242857;
+  --dark-border: #374151;
+  --dark-border-hover: #4b5563;
+  --dark-text: #e5e7eb;
+  --dark-text-secondary: #9ca3af;
+  --dark-accent: #60a5fa;
+
+  /* Gradients (RobiPet) */
+  --gradient-dark: linear-gradient(135deg, #1e3a8a 0%, #1e40af 25%, #1d4ed8 50%, #1e3a8a 100%);
+  --gradient-nav: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-card: linear-gradient(145deg, #1a1d3a 0%, #16213e 100%);
+  --gradient-btn-primary: linear-gradient(to right, #3b82f6, #6366f1);
+  --gradient-btn-green: linear-gradient(to right, #22c55e, #10b981);
+  --gradient-avatar: linear-gradient(to right, #3b82f6, #8b5cf6);
+
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  background: var(--dark-primary);
+  color: var(--dark-text);
+  min-height: 100vh;
+  min-height: calc(100vh - env(safe-area-inset-bottom));
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.text-dark-primary { color: var(--dark-text); }
+.text-dark-text-secondary { color: var(--dark-text-secondary); }
+
+.hidden { display: none !important; }
+@media (min-width: 640px) {
+  .sm\:inline { display: inline !important; }
+}
+
+/* ========== PWA Install prompt ========== */
+.install-prompt {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.5rem 1rem;
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+.install-prompt-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.install-prompt-logo {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+.install-prompt-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.install-prompt-text strong {
+  color: #fff;
+  font-size: 0.95rem;
+}
+.install-prompt-text span {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.8rem;
+}
+.install-prompt-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+.install-prompt-dismiss {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+}
+.install-prompt-dismiss:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.page .error { color: #f87171; }
+
+.hover\:underline:hover { text-decoration: underline; }
+
+/* ========== Nav (RobiPet: sticky gradient, blur, icons) ========== */
+.app-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--gradient-nav);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  height: 4rem;
+}
+
+/* Left slot: fixed min size so Back vs Brand doesn't shift navbar */
+.nav-left-slot {
+  min-width: 10rem;
+  min-height: 2.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.nav-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #fff;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.2s;
+}
+
+.nav-back-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+.nav-brand {
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: #fff;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.nav-brand .nav-logo {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.nav-links a {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.nav-links a:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.nav-links a.active {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 1rem;
+  padding-left: 1rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.nav-user {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin-right: 0.25rem;
+}
+
+.nav .btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.9);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.nav .btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.nav-role-badge {
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+.nav-role-admin {
+  background: rgba(168, 85, 247, 0.3);
+  color: #e9d5ff;
+}
+.nav-role-user {
+  background: rgba(59, 130, 246, 0.3);
+  color: #bfdbfe;
+}
+
+/* Mobile: hamburger button (hidden on desktop) */
+.nav-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  margin-left: auto;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius);
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+}
+.nav-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+@media (max-width: 768px) {
+  .nav {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+    flex-wrap: wrap;
+    min-height: 4rem;
+    height: auto;
+  }
+  .nav-left-slot {
+    min-width: 0;
+  }
+  .nav-brand-text {
+    display: none;
+  }
+  .nav-links,
+  .nav-right {
+    display: none;
+    width: 100%;
+    flex-basis: 100%;
+    order: 10;
+    margin: 0;
+    padding: 0;
+    border: none;
+  }
+  .nav-links-open,
+  .nav-right-open {
+    display: flex;
+  }
+  .nav-links {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.5rem 0 0.75rem;
+    gap: 0.25rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    margin-top: 0.25rem;
+  }
+  .nav-links a {
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius);
+  }
+  .nav-right {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.75rem 0 0.5rem;
+    gap: 0.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  .nav-right .btn {
+    justify-content: flex-start;
+    padding: 0.6rem 1rem;
+  }
+  .nav-user {
+    margin-right: 0;
+  }
+  .nav-menu-btn {
+    display: flex;
+  }
+}
+
+/* ========== Main content ========== */
+.main {
+  flex: 1;
+  padding: 1.5rem;
+  padding-left: max(1.5rem, env(safe-area-inset-left));
+  padding-right: max(1.5rem, env(safe-area-inset-right));
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .main {
+    padding: 1rem;
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+}
+
+/* ========== Login (RobiPet: full-screen gradient, glass card) ========== */
+.loading-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-size: 1.125rem;
+  color: var(--dark-text-secondary);
+}
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(to bottom right, #0f172a, #1e3a8a, #0f172a);
+}
+
+.login-page .login-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  padding-left: max(2rem, env(safe-area-inset-left));
+  padding-right: max(2rem, env(safe-area-inset-right));
+}
+
+@media (max-width: 768px) {
+  .login-page .login-wrap {
+    padding: 1rem;
+  }
+  .login-card {
+    padding: 1.5rem;
+  }
+}
+
+.login-card {
+  width: 100%;
+  max-width: 28rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 3rem;
+}
+
+.login-card h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+}
+
+.login-card .tagline {
+  margin: 0 0 2rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.login-card form label {
+  display: block;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--dark-text-secondary);
+}
+
+.login-card form input {
+  display: block;
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.875rem 1rem 0.875rem 2.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius);
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-family: inherit;
+}
+
+.login-card form input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.login-card form input:focus {
+  outline: none;
+  border-color: var(--dark-accent);
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.3);
+}
+
+.login-card form .input-wrap {
+  position: relative;
+}
+
+.login-card form .input-wrap .input-icon {
+  position: absolute;
+  left: 0.875rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+}
+
+.login-card form button[type="submit"] {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--gradient-btn-primary);
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: var(--shadow);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.login-card form button[type="submit"]:hover:not(:disabled) {
+  box-shadow: var(--shadow-lg);
+  transform: scale(1.02);
+}
+
+.login-card form button[type="submit"]:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.login-card .error {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: #fecaca;
+  padding: 0.75rem;
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+/* ========== Page & cards (RobiPet: dark cards, gradient borders) ========== */
+.page {
+  min-height: 0;
+}
+
+.page-header {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.page-header .back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+  color: var(--dark-accent);
+  text-decoration: none;
+  font-size: 0.95rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+
+.page-header .back:hover {
+  color: #93c5fd;
+}
+
+.page-header .header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    margin-bottom: 1rem;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .page-header .header-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .page-header .header-row .btn,
+  .page-header > .btn,
+  .page-header > a.btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Card container (RobiPet list wrapper) */
+.card-panel {
+  background: var(--gradient-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--dark-border-hover);
+  padding: 2rem;
+}
+
+@media (max-width: 768px) {
+  .card-panel {
+    padding: 1.25rem;
+  }
+}
+
+/* Dashboard: "Your pets" + Add Pet button grouped */
+.dashboard-pets-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .dashboard-pets-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  .dashboard-controls input {
+    min-width: 0;
+    width: 100%;
+  }
+  .dashboard-controls select {
+    width: 100%;
+  }
+}
+
+/* Dashboard search and sort: match site dark theme (same as .form-inline inputs) */
+.dashboard-controls input,
+.dashboard-controls select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--dark-border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: var(--dark-secondary);
+  color: var(--dark-text);
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.dashboard-controls input::placeholder {
+  color: var(--dark-text-secondary);
+}
+
+.dashboard-controls input:focus,
+.dashboard-controls select:focus {
+  outline: none;
+  border-color: var(--dark-accent);
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+}
+
+.dashboard-controls select {
+  cursor: pointer;
+  min-height: 2.25rem;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239ca3af' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  padding-right: 1.75rem;
+}
+
+/* Admin default options: tab row */
+.admin-options-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Pet grid / dashboard */
+.pet-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 400px) {
+  .pet-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pet-card {
+  display: block;
+  background: var(--dark-secondary);
+  border: 1px solid var(--dark-border-hover);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: var(--shadow);
+  transition: all 0.3s;
+}
+
+.pet-card:hover {
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.pet-card .pet-avatar {
+  width: 4rem;
+  height: 4rem;
+  border-radius: var(--radius);
+  background: var(--gradient-avatar);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.pet-card .pet-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pet-card h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--dark-text);
+}
+
+.pet-card:hover h3 {
+  color: var(--dark-accent);
+}
+
+.pet-card .meta {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--dark-text-secondary);
+}
+
+/* Horizontal card: image left, content right — fixed height so all cards match */
+.pet-card-horizontal {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  overflow: hidden;
+  gap: 1rem;
+  height: 9rem;
+  box-sizing: border-box;
+}
+
+.pet-card-image {
+  width: 3.5rem;
+  min-width: 3.5rem;
+  height: 3.5rem;
+  padding: 0.5rem;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--gradient-avatar);
+  flex-shrink: 0;
+}
+
+.pet-card-horizontal .pet-card-image img {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 50%;
+}
+
+.pet-card-placeholder {
+  font-size: 1.5rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+.pet-card-body {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background: var(--gradient-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--dark-border-hover);
+}
+
+.empty-state p {
+  margin: 0 0 1rem;
+  color: var(--dark-text-secondary);
+}
+
+/* ========== Pet detail: sidebar + main (RobiPet layout) ========== */
+.pet-detail-layout {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.pet-detail-sidebar {
+  flex: 0 0 16rem;
+  min-width: 0;
+}
+
+.pet-detail-main {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  .pet-detail-sidebar {
+    flex-basis: 100%;
+  }
+}
+
+/* Pet hero card (gradient like RobiPet) */
+.pet-hero-card {
+  background: var(--gradient-nav);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.pet-hero {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.pet-hero .pet-avatar {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.pet-hero .pet-avatar.large {
+  width: 5rem;
+  height: 5rem;
+  font-size: 2rem;
+}
+
+.pet-hero .pet-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pet-hero h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.75rem;
+  color: #fff;
+}
+
+.pet-hero .meta {
+  margin: 0.1rem 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Tab nav (RobiPet: slate-800 rounded) */
+.tabs-wrap {
+  background: #1e293b;
+  border: 1px solid var(--dark-border);
+  border-radius: var(--radius-lg);
+  padding: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.tabs button {
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background: none;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  color: var(--dark-text-secondary);
+  font-family: inherit;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tabs button:hover {
+  color: var(--dark-text);
+  background: var(--dark-card-hover);
+}
+
+.tabs button.active {
+  background: var(--gradient-btn-primary);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+/* Section blocks */
+.section {
+  background: var(--gradient-card);
+  border: 1px solid var(--dark-border-hover);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.section h2 {
+  margin: 0 0 1rem;
+  font-size: 1.15rem;
+  color: var(--dark-text);
+}
+
+.section .muted {
+  color: var(--dark-text-secondary);
+  font-size: 0.9rem;
+  margin: 0 0 0.75rem;
+}
+
+.form-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.form-inline input,
+.form-inline select,
+.form-inline .input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--dark-border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: var(--dark-secondary);
+  color: var(--dark-text);
+}
+
+.form-inline select {
+  cursor: pointer;
+  min-height: 2.25rem;
+}
+
+/* SearchableSelect: match form control + dropdown look like native select */
+.form .searchable-select-label {
+  display: block;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--dark-text-secondary);
+}
+
+.form .searchable-select-wrap {
+  display: block;
+  position: relative;
+  margin-top: 0.35rem;
+}
+
+.form .searchable-select-input {
+  display: block;
+  width: 100%;
+  padding: 0.6rem 2rem 0.6rem 0.85rem;
+  border: 1px solid var(--dark-border);
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  background: var(--dark-secondary);
+  color: var(--dark-text);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.form .searchable-select-input:focus {
+  outline: none;
+  border-color: var(--dark-accent);
+}
+
+.form .searchable-select-arrow {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  font-size: 0.6rem;
+  color: var(--dark-text-secondary);
+}
+
+.combobox-wrap {
+  position: relative;
+  display: block;
+}
+
+/* Arrow inside the box for all comboboxes (vaccination form has no .form parent) */
+.combobox-wrap .searchable-select-arrow {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.6rem;
+  color: var(--dark-text-secondary);
+}
+
+.combobox-wrap .searchable-select-arrow.combobox-arrow {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.combobox-wrap .searchable-select-input {
+  padding-right: 2rem;
+  border: 1px solid var(--dark-border);
+  border-radius: 8px;
+  background: var(--dark-secondary);
+  color: var(--dark-text);
+}
+
+.combobox-list {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+  background: var(--dark-secondary);
+  border: 1px solid var(--dark-border);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  max-height: 12rem;
+  overflow-y: auto;
+  z-index: 50;
+  box-shadow: var(--shadow);
+}
+
+.combobox-option {
+  padding: 0.5rem 0.85rem;
+  font-size: 1rem;
+  color: var(--dark-text);
+  cursor: pointer;
+}
+
+.combobox-option:hover,
+.combobox-option:focus-visible {
+  background: var(--dark-card-hover);
+}
+
+.combobox-option-custom {
+  color: var(--dark-accent);
+  border-top: 1px solid var(--dark-border);
+}
+
+/* Toast / inline notification */
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  border: 1px solid;
+}
+
+.toast-info {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.35);
+  color: var(--dark-text);
+}
+
+.toast-info svg {
+  flex-shrink: 0;
+  color: var(--dark-accent);
+}
+
+.toast span {
+  flex: 1;
+}
+
+.toast-dismiss {
+  flex-shrink: 0;
+  padding: 0.25rem;
+  background: none;
+  border: none;
+  border-radius: var(--radius);
+  color: var(--dark-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.toast-dismiss:hover {
+  color: var(--dark-text);
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* Vaccination add form: single grid so labels and inputs share columns */
+.vaccinations-add-form {
+  display: grid;
+  grid-template-columns: minmax(100px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr) minmax(90px, 1fr) minmax(140px, auto);
+  grid-template-rows: auto auto;
+  gap: 0.5rem 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+  overflow: visible;
+}
+
+@media (max-width: 768px) {
+  .vaccinations-add-form {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+.vaccinations-add-form .vacc-form-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--dark-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.vaccinations-add-form .vacc-form-combo {
+  min-width: 0;
+}
+
+.vaccinations-add-form .vacc-form-combo .searchable-select-label {
+  margin-bottom: 0;
+}
+
+.vaccinations-add-form .vacc-form-combo .searchable-select-input {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Keep dropdown list visible and wide enough so options show (grid cell can be narrow) */
+.vaccinations-add-form .vacc-form-combo {
+  overflow: visible;
+}
+
+.vaccinations-add-form .combobox-list {
+  min-width: 14rem;
+  width: max-content;
+  max-width: min(20rem, 100vw);
+}
+
+.vaccinations-add-form .vacc-form-actions {
+  display: flex;
+  gap: 0.5rem;
+  grid-column: 5;
+  grid-row: 2;
+}
+
+.vaccinations-add-form .vacc-date-group {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.vaccinations-add-form .vacc-date-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--dark-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* Document list: name as styled UI button */
+.document-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.document-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--dark-border);
+}
+
+.document-list-item:last-child {
+  border-bottom: none;
+}
+
+.document-item-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.document-item-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--dark-accent);
+  background: rgba(124, 156, 191, 0.12);
+  border: 1px solid var(--dark-border);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.document-item-name:hover {
+  background: rgba(124, 156, 191, 0.2);
+  border-color: var(--dark-accent);
+}
+
+.document-item-name span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.document-item-date {
+  font-size: 0.875rem;
+  color: var(--dark-text-secondary);
+  flex-shrink: 0;
+}
+
+/* Documents: styled file input (button look) */
+.documents-upload-form {
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.file-input-label {
+  display: inline-flex;
+  cursor: pointer;
+}
+
+.file-input-button {
+  cursor: pointer;
+  white-space: nowrap;
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-input-hidden {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--dark-border);
+  gap: 0.75rem;
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--gradient-btn-primary);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.btn-secondary {
+  background: var(--dark-card-hover);
+  color: var(--dark-text);
+  border: 1px solid var(--dark-border);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--dark-border);
+  color: var(--dark-text);
+}
+
+.btn-sm {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.85rem;
+}
+
+.btn-danger {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #dc2626;
+  color: #fff;
+}
+
+/* Form */
+.form {
+  background: var(--gradient-card);
+  border: 1px solid var(--dark-border-hover);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  max-width: 480px;
+}
+
+@media (max-width: 768px) {
+  .form {
+    max-width: 100%;
+    padding: 1.25rem;
+  }
+}
+
+.form label {
+  display: block;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--dark-text-secondary);
+}
+
+/* Gender + Fixed row: two dropdowns side by side, split width to match other form controls */
+.form-row-gender-fixed {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 1rem;
+  margin-bottom: 1rem;
+}
+.form-row-gender-fixed > label {
+  margin-bottom: 0;
+}
+.form-row-gender-fixed select {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form input,
+.form select,
+.form textarea {
+  display: block;
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--dark-border);
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  background: var(--dark-secondary);
+  color: var(--dark-text);
+}
+
+.form input:focus,
+.form select:focus,
+.form textarea:focus {
+  outline: none;
+  border-color: var(--dark-accent);
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+/* Data table */
+.table-wrap {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--dark-border);
+}
+
+.data-table th {
+  font-weight: 600;
+  color: var(--dark-accent);
+}
+
+.role-select {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--dark-border);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: var(--dark-secondary);
+  color: var(--dark-text);
+}
+
+/* SearchableSelect inside form */
+.form input[list] {
+  background: var(--dark-secondary);
+  color: var(--dark-text);
+  border-color: var(--dark-border);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.animate-spin {
+  animation: spin 0.8s linear infinite;
+}
+
+/* Footer (RobiPet-style) */
+.footer {
+  margin-top: auto;
+  background: linear-gradient(to right, #0f172a, #1e3a8a, #0f172a);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1.5rem 1rem;
+  text-align: center;
+}
+
+.footer .footer-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.footer .footer-copy {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+}

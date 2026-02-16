@@ -1,0 +1,66 @@
+# Dependencies
+node_modules/
+backend/vendor/
+
+# Build outputs
+frontend/dist/
+frontend/dist-ssr/
+*.exe
+*.dll
+*.so
+*.dylib
+/api
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+*.pem
+
+# IDE and editors
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Cursor / AI-assisted coding
+.cursor/
+.cursorignore
+*.code-workspace
+
+# Qwen / AI-assisted coding
+.qwen/
+QWEN.md
+.qwenignore
+
+# Logs and debug
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Uploads (user data, keep out of repo)
+uploads/
+
+# Go
+*.test
+*.out
+coverage.out
+backend/.gopath/
+backend/api.exe
+
+# OS
+Thumbs.db
+*.local
+
+# Optional
+*.local

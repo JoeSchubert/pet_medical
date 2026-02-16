@@ -1,0 +1,105 @@
+# Pet Medical - Docker Compose sample
+# Copy to docker-compose.yml or use: docker compose -f docker-compose.sample.yml up
+# All environment variables are documented below with defaults where applicable.
+
+services:
+  app:
+    build: .
+    ports:
+      # Host:container port mapping. App listens on 8080 inside the container.
+      - "8080:8080"
+    environment:
+      # ----- Server -----
+      # Port the API listens on inside the container (must match the exposed port above).
+      PORT: "8080"
+
+      # ----- Database -----
+      # PostgreSQL connection string. Format: postgres://user:password@host:port/dbname?options
+      # When using the db service below, host is "db". For external DB, use your host.
+      DATABASE_URL: "postgres://postgres:postgres@db:5432/pet_medical?sslmode=disable"
+
+      # ----- Security -----
+      # Set to true/1/yes for local development: relaxes security (no Secure cookies, no HSTS, no strict warnings). Default false.
+      DEVELOPMENT: "${DEVELOPMENT:-false}"
+      # Secret used to sign JWT access tokens. Use a long random value in production (e.g. openssl rand -base64 32).
+      JWT_SECRET: "${JWT_SECRET:-change-me-in-production-min-32-chars}"
+      # When DEVELOPMENT is false: set to true when serving over HTTPS (cookies Secure flag). Defaults to true in production. Ignored when DEVELOPMENT=true.
+      SECURE_COOKIES: "${SECURE_COOKIES:-true}"
+      # Access token lifetime in minutes (default: 30).
+      JWT_ACCESS_TTL_MIN: "${JWT_ACCESS_TTL_MIN:-30}"
+      # Refresh token lifetime in days (default: 7).
+      JWT_REFRESH_TTL_DAYS: "${JWT_REFRESH_TTL_DAYS:-7}"
+
+      # ----- CORS -----
+      # Comma-separated list of allowed origins for CORS, or * for any. Example: https://app.example.com,https://www.example.com
+      CORS_ORIGINS: "${CORS_ORIGINS:-*}"
+
+      # ----- Logging -----
+      # Set to true, 1, or yes to enable debug logging.
+      ENABLE_DEBUG_LOGGING: "${ENABLE_DEBUG_LOGGING:-false}"
+      # Server-side log message language (e.g. en, es). Used for backend log strings only.
+      SYSTEM_LANGUAGE: "${SYSTEM_LANGUAGE:-en}"
+
+      # ----- User defaults (for new users and when settings are empty) -----
+      # Default weight unit for new users and seed admin: lbs or kg.
+      DEFAULT_WEIGHT_UNIT: "${DEFAULT_WEIGHT_UNIT:-lbs}"
+      # Default currency for new users (e.g. USD, EUR, GBP).
+      DEFAULT_CURRENCY: "${DEFAULT_CURRENCY:-USD}"
+      # Default UI language for new users (e.g. en, es, fr, de).
+      DEFAULT_LANGUAGE: "${DEFAULT_LANGUAGE:-en}"
+
+      # ----- File storage -----
+      # Directory where uploaded photos and documents are stored. Must be writable by the app.
+      UPLOAD_DIR: "/app/uploads"
+
+      # ----- Google OAuth (e.g. for oauth2-proxy or app-side OAuth) -----
+      # Client ID from Google Cloud Console (OAuth 2.0 Web client).
+      GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
+      # Client secret.
+      GOOGLE_CLIENT_SECRET: "${GOOGLE_CLIENT_SECRET:-}"
+      # Redirect URI registered in Google (e.g. https://yourdomain.com/oauth2/callback for oauth2-proxy).
+      GOOGLE_REDIRECT_URI: "${GOOGLE_REDIRECT_URI:-}"
+
+      # ----- Trusted proxies (oauth2-proxy or other reverse proxy) -----
+      # Comma-separated IPs or CIDRs (e.g. "10.0.0.1,172.16.0.0/12"). When the request comes from one of these,
+      # the app trusts X-Forwarded-* and the forwarded auth headers below. Used to log in users by email from
+      # the proxy (find or create user, set app cookies).
+      TRUSTED_PROXIES: "${TRUSTED_PROXIES:-}"
+      # Header name for email set by the proxy (default: X-Forwarded-Email).
+      FORWARDED_EMAIL_HEADER: "${FORWARDED_EMAIL_HEADER:-X-Forwarded-Email}"
+      # Header name for username set by the proxy (default: X-Forwarded-User).
+      FORWARDED_USER_HEADER: "${FORWARDED_USER_HEADER:-X-Forwarded-User}"
+
+    volumes:
+      # Persist photo uploads across container restarts.
+      - photos_uploads:/app/uploads/photos
+      # Persist document uploads across container restarts.
+      - documents_uploads:/app/uploads/documents
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      # PostgreSQL superuser (used for connections).
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      # Database name (must match the dbname in DATABASE_URL).
+      POSTGRES_DB: pet_medical
+    volumes:
+      # Persist database data across container restarts.
+      - pet_medical_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pet_medical_pgdata:
+  photos_uploads:
+  documents_uploads:

@@ -1,0 +1,21 @@
+{
+  "log.auth.login_request": "[AUTH] login request method=%s",
+  "log.auth.login_rejected_method": "[AUTH] login rejected method not allowed",
+  "log.auth.login_decode_error": "[AUTH] login decode error: %v",
+  "log.auth.login_attempt": "[AUTH] login attempt email=%q",
+  "log.auth.login_rejected_missing": "[AUTH] login rejected missing email or password",
+  "log.auth.login_failed_not_found": "[AUTH] login failed user not found email=%q err=%v",
+  "log.auth.login_failed_bad_password": "[AUTH] login failed bad password email=%q",
+  "log.auth.login_jwt_error": "[AUTH] login JWT error: %v",
+  "log.auth.login_refresh_error": "[AUTH] login refresh token create error: %v",
+  "log.auth.login_success": "[AUTH] login success display_name=%q user_id=%s",
+  "log.http.request": "[HTTP] %s %s",
+  "log.http.response": "[HTTP] %s %s %d %d %s",
+  "error.method_not_allowed": "method not allowed",
+  "error.invalid_request": "invalid request",
+  "error.username_password_required": "username and password required",
+  "error.email_password_required": "email and password required",
+  "error.invalid_credentials": "invalid credentials",
+  "error.unauthorized": "unauthorized",
+  "error.internal_error": "internal error"
+}

@@ -1,0 +1,48 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      DEVELOPMENT: "${DEVELOPMENT:-false}"
+      PORT: "8080"
+      DATABASE_URL: "postgres://postgres:postgres@db:5432/pet_medical?sslmode=disable"
+      JWT_SECRET: "${JWT_SECRET:-change-me-in-production-min-32-chars}"
+      UPLOAD_DIR: "/app/uploads"
+      ENABLE_DEBUG_LOGGING: "${ENABLE_DEBUG_LOGGING:-false}"
+      SYSTEM_LANGUAGE: "${SYSTEM_LANGUAGE:-en}"
+      DEFAULT_WEIGHT_UNIT: "${DEFAULT_WEIGHT_UNIT:-lbs}"
+      DEFAULT_CURRENCY: "${DEFAULT_CURRENCY:-USD}"
+      DEFAULT_LANGUAGE: "${DEFAULT_LANGUAGE:-en}"
+      GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
+      GOOGLE_CLIENT_SECRET: "${GOOGLE_CLIENT_SECRET:-}"
+      GOOGLE_REDIRECT_URI: "${GOOGLE_REDIRECT_URI:-}"
+      TRUSTED_PROXIES: "${TRUSTED_PROXIES:-}"
+      FORWARDED_EMAIL_HEADER: "${FORWARDED_EMAIL_HEADER:-X-Forwarded-Email}"
+      FORWARDED_USER_HEADER: "${FORWARDED_USER_HEADER:-X-Forwarded-User}"
+    volumes:
+      - photos_uploads:/app/uploads/photos
+      - documents_uploads:/app/uploads/documents
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pet_medical
+    volumes:
+      - pet_medical_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pet_medical_pgdata:
+  photos_uploads:
+  documents_uploads:
