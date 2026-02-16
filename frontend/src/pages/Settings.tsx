@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { usePWAInstall } from '../contexts/PWAInstallContext'
 import { useTranslation } from '../i18n/context'
-import { settingsApi, type Settings, type WeightUnit } from '../api/client'
+import { settingsApi, changePassword as apiChangePassword, type Settings, type WeightUnit } from '../api/client'
 
 export default function Settings() {
   const { user, refreshUser } = useAuth()
@@ -17,6 +17,12 @@ export default function Settings() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const [passwordCurrent, setPasswordCurrent] = useState('')
+  const [passwordNew, setPasswordNew] = useState('')
+  const [passwordConfirm, setPasswordConfirm] = useState('')
+  const [passwordChanging, setPasswordChanging] = useState(false)
+  const [passwordError, setPasswordError] = useState('')
+  const [passwordMessage, setPasswordMessage] = useState('')
 
   useEffect(() => {
     const normalize = (s: Settings) => ({
@@ -69,6 +75,39 @@ export default function Settings() {
     const id = window.setTimeout(() => setMessage(''), 5000)
     return () => window.clearTimeout(id)
   }, [message])
+
+  useEffect(() => {
+    if (!passwordMessage) return
+    const id = window.setTimeout(() => setPasswordMessage(''), 5000)
+    return () => window.clearTimeout(id)
+  }, [passwordMessage])
+
+  async function handleChangePassword(e: React.FormEvent) {
+    e.preventDefault()
+    setPasswordError('')
+    setPasswordMessage('')
+    if (passwordNew !== passwordConfirm) {
+      setPasswordError(t('settings.passwordsDoNotMatch'))
+      return
+    }
+    if (passwordNew.length < 8) {
+      setPasswordError(t('error.password_too_short'))
+      return
+    }
+    setPasswordChanging(true)
+    try {
+      await apiChangePassword(passwordCurrent, passwordNew)
+      setPasswordCurrent('')
+      setPasswordNew('')
+      setPasswordConfirm('')
+      setPasswordMessage(t('settings.passwordChanged'))
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : ''
+      setPasswordError(msg.startsWith('error.') ? t(msg) : msg || t('settings.passwordChangeFailed'))
+    } finally {
+      setPasswordChanging(false)
+    }
+  }
 
   if (loading) return <div className="page"><p>{t('common.loading')}</p></div>
   if (error) return <div className="page"><p className="error">{error}</p></div>
@@ -164,6 +203,53 @@ export default function Settings() {
           </button>
         </div>
       </form>
+
+      {!isAdminEditing && (
+        <section className="section" style={{ maxWidth: 360, marginTop: '1.5rem' }}>
+          <h2 style={{ marginTop: 0 }}>{t('settings.changePassword')}</h2>
+          <form onSubmit={handleChangePassword} className="form">
+            <label>
+              {t('settings.currentPassword')}
+              <input
+                type="password"
+                value={passwordCurrent}
+                onChange={(e) => setPasswordCurrent(e.target.value)}
+                autoComplete="current-password"
+                required
+              />
+            </label>
+            <label>
+              {t('settings.newPassword')}
+              <input
+                type="password"
+                value={passwordNew}
+                onChange={(e) => setPasswordNew(e.target.value)}
+                autoComplete="new-password"
+                minLength={8}
+                required
+              />
+            </label>
+            <label>
+              {t('settings.confirmPassword')}
+              <input
+                type="password"
+                value={passwordConfirm}
+                onChange={(e) => setPasswordConfirm(e.target.value)}
+                autoComplete="new-password"
+                minLength={8}
+                required
+              />
+            </label>
+            {passwordError && <p className="error">{passwordError}</p>}
+            {passwordMessage && <p className="message" style={{ color: 'var(--dark-accent)' }}>{passwordMessage}</p>}
+            <div className="form-actions">
+              <button type="submit" className="btn btn-primary" disabled={passwordChanging}>
+                {passwordChanging ? t('common.saving') : t('settings.changePassword')}
+              </button>
+            </div>
+          </form>
+        </section>
+      )}
 
       {pwa && !pwa.isStandalone && (
         <section className="section" style={{ maxWidth: 360, marginTop: '1.5rem' }}>

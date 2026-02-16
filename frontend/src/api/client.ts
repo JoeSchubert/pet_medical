@@ -126,6 +126,18 @@ export async function logout(): Promise<void> {
   clearAccessToken()
 }
 
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  const res = await fetchApi('/auth/change-password', {
+    method: 'PUT',
+    body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    const msg = (err as { error?: string }).error || 'Failed to change password'
+    throw new Error(msg)
+  }
+}
+
 export async function getMe(): Promise<User> {
   logApi('getMe() called')
   const res = await fetchApi('/auth/me')

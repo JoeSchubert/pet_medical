@@ -99,6 +99,7 @@ func main() {
 	api := router.PathPrefix("/api").Subrouter()
 	api.Use(middleware.AuthRequired(jwt))
 	api.HandleFunc("/auth/me", authHandler.Me).Methods(http.MethodGet)
+	api.HandleFunc("/auth/change-password", authHandler.ChangePassword).Methods(http.MethodPost, http.MethodPut)
 	api.HandleFunc("/settings", settingsHandler.GetMine).Methods(http.MethodGet)
 	api.HandleFunc("/settings", settingsHandler.UpdateMine).Methods(http.MethodPut, http.MethodPatch)
 	api.HandleFunc("/custom-options", customOptsHandler.Get).Methods(http.MethodGet)

@@ -34,6 +34,9 @@
   "error.internal_error": "Internal error",
   "error.not_found": "Not found",
   "error.forbidden": "Forbidden",
+  "error.password_required": "Current and new password are required",
+  "error.password_too_short": "New password must be at least 8 characters",
+  "error.no_password_account": "This account has no password (signed in with another provider)",
 
   "login.title": "Log in",
   "login.username": "Username",
@@ -57,6 +60,13 @@
   "settings.saveFailed": "Failed to save",
   "settings.pounds": "Pounds (lbs)",
   "settings.kilograms": "Kilograms (kg)",
+  "settings.changePassword": "Change password",
+  "settings.currentPassword": "Current password",
+  "settings.newPassword": "New password",
+  "settings.confirmPassword": "Confirm new password",
+  "settings.passwordChanged": "Password changed successfully.",
+  "settings.passwordChangeFailed": "Failed to change password",
+  "settings.passwordsDoNotMatch": "New password and confirmation do not match.",
 
   "pet.notFound": "Pet not found.",
   "pet.backToDashboard": "Back to dashboard",

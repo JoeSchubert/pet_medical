@@ -287,3 +287,59 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 		Language:    dbUser.Language,
 	})
 }
+
+// ChangePasswordRequest is the body for POST /api/auth/change-password.
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"current_password"`
+	NewPassword     string `json:"new_password"`
+}
+
+func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost && r.Method != http.MethodPut {
+		http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+		return
+	}
+	u := middleware.GetUser(r.Context())
+	if u == nil {
+		http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+		return
+	}
+	var req ChangePasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, `{"error":"error.invalid_request"}`, http.StatusBadRequest)
+		return
+	}
+	req.NewPassword = strings.TrimSpace(req.NewPassword)
+	if req.CurrentPassword == "" || req.NewPassword == "" {
+		http.Error(w, `{"error":"error.password_required"}`, http.StatusBadRequest)
+		return
+	}
+	if len(req.NewPassword) < 8 {
+		http.Error(w, `{"error":"error.password_too_short"}`, http.StatusBadRequest)
+		return
+	}
+	var dbUser models.User
+	if err := h.DB.Where("id = ?", u.ID).First(&dbUser).Error; err != nil {
+		http.Error(w, `{"error":"error.not_found"}`, http.StatusNotFound)
+		return
+	}
+	if dbUser.PasswordHash == "" {
+		http.Error(w, `{"error":"error.no_password_account"}`, http.StatusBadRequest)
+		return
+	}
+	if !auth.CheckPassword(dbUser.PasswordHash, req.CurrentPassword) {
+		http.Error(w, `{"error":"error.invalid_credentials"}`, http.StatusUnauthorized)
+		return
+	}
+	hash, err := auth.HashPassword(req.NewPassword)
+	if err != nil {
+		http.Error(w, `{"error":"error.internal_error"}`, http.StatusInternalServerError)
+		return
+	}
+	if err := h.DB.Model(&models.User{}).Where("id = ?", u.ID).Update("password_hash", hash).Error; err != nil {
+		http.Error(w, `{"error":"error.internal_error"}`, http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"message": "ok"})
+}
