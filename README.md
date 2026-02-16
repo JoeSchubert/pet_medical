@@ -64,12 +64,15 @@ Environment variables can be set in `docker-compose.yml`, a `.env` file, or the 
 | **`FORWARDED_USER_HEADER`** | Header name for display name from proxy | `X-Forwarded-User` |
 | `DEVELOPMENT` | Set to `true` (or `1`/`yes`) for local dev: relaxes security (cookies not Secure, no HSTS, no JWT/CORS warnings). Default `false`. | `false` |
 | `SECURE_COOKIES` | When **not** in development: set to `true` for HTTPS so auth cookies use the Secure flag. Defaults to `true` when `DEVELOPMENT` is false. Ignored when `DEVELOPMENT=true`. | `true` (when not dev) |
+| **`SAME_SITE_COOKIE`** | Cookie SameSite: `lax`, `strict`, or `none`. Use `none` behind a reverse proxy (e.g. Kubernetes Ingress + oauth2-proxy) if you get 401s after login when navigating; requires HTTPS (Secure cookies). Default `lax`. | `lax` |
 
 When running behind **oauth2-proxy** (or similar), set `TRUSTED_PROXIES` to the proxy’s IP or CIDR so the app trusts `X-Forwarded-Email` (and optional `X-Forwarded-User` for display name). Users are matched by email to existing accounts or auto-created with default role/settings. For Google-based proxy login, set these in the proxy; the app does not require them to run (they are optional).
 
 **Production**: Do **not** set `DEVELOPMENT=true`. Set a strong `JWT_SECRET` (e.g. `openssl rand -base64 32`), restrict `CORS_ORIGINS` to your frontend origin(s), use a dedicated database and backup strategy, and change the default admin password after first login. With `DEVELOPMENT` unset or false, cookies default to Secure and the app logs warnings at startup when JWT_SECRET or CORS_ORIGINS use default/permissive values.
 
 **Development**: Set `DEVELOPMENT=true` (or `1`/`yes`) for local development to allow HTTP cookies, disable HSTS, and silence strict security warnings.
+
+**Kubernetes / reverse proxy**: If you see 401s after logging in when navigating (e.g. `/auth/me` or `/auth/refresh` failing), set `SAME_SITE_COOKIE=none` so the browser sends auth cookies on requests behind the proxy. Use `/health` (or `/api/health`) for liveness and readiness probes.
 
 ## Local development
 

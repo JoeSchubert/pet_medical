@@ -70,8 +70,8 @@ func TrustedProxyAuth(cfg *config.Config, db *gorm.DB, jwt *auth.JWT, refreshSto
 				next.ServeHTTP(w, r)
 				return
 			}
-			setRefreshCookie(w, refreshToken, int(jwt.RefreshTokenDuration().Seconds()), cfg.SecureCookies)
-			setAccessCookie(w, accessToken, 15*60, cfg.SecureCookies)
+			setRefreshCookie(w, refreshToken, int(jwt.RefreshTokenDuration().Seconds()), cfg.SecureCookies, int(cfg.SameSiteCookie))
+			setAccessCookie(w, accessToken, 15*60, cfg.SecureCookies, int(cfg.SameSiteCookie))
 			ctx := context.WithValue(r.Context(), UserContextKey, &UserInfo{
 				ID:          u.ID,
 				DisplayName: u.DisplayName,
@@ -163,7 +163,18 @@ func sanitizeDisplayName(s string) string {
 	return out
 }
 
-func setRefreshCookie(w http.ResponseWriter, token string, maxAge int, secure bool) {
+func sameSiteMode(sameSite int) http.SameSite {
+	switch sameSite {
+	case int(http.SameSiteNoneMode):
+		return http.SameSiteNoneMode
+	case int(http.SameSiteStrictMode):
+		return http.SameSiteStrictMode
+	default:
+		return http.SameSiteLaxMode
+	}
+}
+
+func setRefreshCookie(w http.ResponseWriter, token string, maxAge int, secure bool, sameSite int) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     refreshCookieName,
 		Value:    token,
@@ -171,11 +182,11 @@ func setRefreshCookie(w http.ResponseWriter, token string, maxAge int, secure bo
 		MaxAge:   maxAge,
 		HttpOnly: true,
 		Secure:   secure,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: sameSiteMode(sameSite),
 	})
 }
 
-func setAccessCookie(w http.ResponseWriter, token string, maxAge int, secure bool) {
+func setAccessCookie(w http.ResponseWriter, token string, maxAge int, secure bool, sameSite int) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     accessCookieName,
 		Value:    token,
@@ -183,6 +194,6 @@ func setAccessCookie(w http.ResponseWriter, token string, maxAge int, secure boo
 		MaxAge:   maxAge,
 		HttpOnly: true,
 		Secure:   secure,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: sameSiteMode(sameSite),
 	})
 }

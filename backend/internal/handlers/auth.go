@@ -28,6 +28,7 @@ type AuthHandler struct {
 	DefaultCurrency   string
 	DefaultLanguage   string
 	SecureCookies     bool // when true, set Secure flag on cookies (use with HTTPS)
+	SameSiteCookie    int  // http.SameSite value (use SameSiteNoneMode behind some reverse proxies)
 }
 
 type LoginRequest struct {
@@ -152,7 +153,7 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	}
 	userID, err := h.RefreshStore.Consume(cookie.Value)
 	if err != nil {
-		clearRefreshCookie(w, h.SecureCookies)
+		h.clearRefreshCookie(w)
 		http.Error(w, `{"error":"invalid or expired refresh token"}`, http.StatusUnauthorized)
 		return
 	}
@@ -197,10 +198,21 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
-	clearRefreshCookie(w, h.SecureCookies)
-	clearAccessCookie(w, h.SecureCookies)
+	h.clearRefreshCookie(w)
+	h.clearAccessCookie(w)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"message": "logged out"})
+}
+
+func (h *AuthHandler) sameSite() http.SameSite {
+	switch h.SameSiteCookie {
+	case int(http.SameSiteNoneMode):
+		return http.SameSiteNoneMode
+	case int(http.SameSiteStrictMode):
+		return http.SameSiteStrictMode
+	default:
+		return http.SameSiteLaxMode
+	}
 }
 
 func (h *AuthHandler) setRefreshCookie(w http.ResponseWriter, token string, maxAge int) {
@@ -211,19 +223,19 @@ func (h *AuthHandler) setRefreshCookie(w http.ResponseWriter, token string, maxA
 		MaxAge:   maxAge,
 		HttpOnly: true,
 		Secure:   h.SecureCookies,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: h.sameSite(),
 	})
 }
 
-func clearRefreshCookie(w http.ResponseWriter, secure bool) {
+func (h *AuthHandler) clearRefreshCookie(w http.ResponseWriter) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     refreshCookieName,
 		Value:    "",
 		Path:     "/",
 		MaxAge:   -1,
 		HttpOnly: true,
-		Secure:   secure,
-		SameSite: http.SameSiteLaxMode,
+		Secure:   h.SecureCookies,
+		SameSite: h.sameSite(),
 	})
 }
 
@@ -235,19 +247,19 @@ func (h *AuthHandler) setAccessCookie(w http.ResponseWriter, token string, maxAg
 		MaxAge:   maxAge,
 		HttpOnly: true,
 		Secure:   h.SecureCookies,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: h.sameSite(),
 	})
 }
 
-func clearAccessCookie(w http.ResponseWriter, secure bool) {
+func (h *AuthHandler) clearAccessCookie(w http.ResponseWriter) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     accessCookieName,
 		Value:    "",
 		Path:     "/",
 		MaxAge:   -1,
 		HttpOnly: true,
-		Secure:   secure,
-		SameSite: http.SameSiteLaxMode,
+		Secure:   h.SecureCookies,
+		SameSite: h.sameSite(),
 	})
 }
 

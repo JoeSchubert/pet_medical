@@ -60,6 +60,7 @@ func main() {
 		DefaultCurrency:   cfg.DefaultCurrency,
 		DefaultLanguage:   cfg.DefaultLanguage,
 		SecureCookies:     cfg.SecureCookies,
+		SameSiteCookie:    int(cfg.SameSiteCookie),
 	}
 	petsHandler := &handlers.PetsHandler{DB: gormDB, UploadDir: uploadDir}
 	vaccHandler := &handlers.VaccinationsHandler{DB: gormDB}
@@ -82,10 +83,12 @@ func main() {
 	defaultOptsHandler := &handlers.DefaultOptionsHandler{GORM: gormDB}
 
 	router := mux.NewRouter()
-	router.HandleFunc("/api/health", func(w http.ResponseWriter, r *http.Request) {
+	healthOK := func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(`{"status":"ok"}`))
-	}).Methods(http.MethodGet)
+	}
+	router.HandleFunc("/health", healthOK).Methods(http.MethodGet)
+	router.HandleFunc("/api/health", healthOK).Methods(http.MethodGet)
 
 	// Public auth
 	router.HandleFunc("/api/auth/login", authHandler.Login).Methods(http.MethodPost)

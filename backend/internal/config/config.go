@@ -2,6 +2,7 @@ package config
 
 import (
 	"net"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -31,6 +32,8 @@ type Config struct {
 	ForwardedUserHeader  string
 	// SecureCookies: when true, cookies use Secure flag (HTTPS only). In development mode this is forced false; otherwise from SECURE_COOKIES (default true).
 	SecureCookies bool
+	// SameSiteCookie: use SameSiteNoneMode behind some reverse proxies so cookies are sent. When None, Secure must be true.
+	SameSiteCookie http.SameSite
 	// Development: when true, relaxes security (no Secure cookies, no HSTS, no startup warnings for default JWT/CORS). Default false.
 	Development bool
 }
@@ -103,6 +106,10 @@ func Load() *Config {
 	} else {
 		secureCookies = parseBoolEnv("SECURE_COOKIES", true)
 	}
+	sameSite := parseSameSiteEnv(os.Getenv("SAME_SITE_COOKIE"))
+	if sameSite == http.SameSiteNoneMode && !secureCookies {
+		sameSite = http.SameSiteLaxMode // None requires Secure
+	}
 	return &Config{
 		ServerPort:           port,
 		DBURL:                dbURL,
@@ -122,6 +129,7 @@ func Load() *Config {
 		ForwardedEmailHeader: forwardedEmail,
 		ForwardedUserHeader:  forwardedUser,
 		SecureCookies:        secureCookies,
+		SameSiteCookie:        sameSite,
 		Development:          development,
 	}
 }
@@ -133,6 +141,20 @@ func parseBoolEnv(key string, defaultVal bool) bool {
 		return defaultVal
 	}
 	return v == "1" || v == "true" || v == "yes"
+}
+
+// parseSameSiteEnv parses SAME_SITE_COOKIE: "none" -> SameSiteNoneMode, "lax" -> LaxMode, "strict" -> StrictMode. Default Lax.
+func parseSameSiteEnv(v string) http.SameSite {
+	switch strings.TrimSpace(strings.ToLower(v)) {
+	case "none":
+		return http.SameSiteNoneMode
+	case "strict":
+		return http.SameSiteStrictMode
+	case "lax", "":
+		return http.SameSiteLaxMode
+	default:
+		return http.SameSiteLaxMode
+	}
 }
 
 // parseTrustedProxies parses a comma-separated list of IPs or CIDRs (e.g. "10.0.0.1,172.16.0.0/12").
