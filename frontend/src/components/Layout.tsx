@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Icon } from '@iconify/react'
 import { useAuth } from '../contexts/AuthContext'
@@ -11,7 +11,19 @@ export default function Layout() {
   const navigate = useNavigate()
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [adminOpen, setAdminOpen] = useState(false)
+  const adminRef = useRef<HTMLDivElement>(null)
   const isPetPage = /^\/pets\/[^/]+(\/edit)?$/.test(location.pathname)
+
+  useEffect(() => setAdminOpen(false), [location.pathname])
+  useEffect(() => {
+    if (!adminOpen) return
+    function handleClick(e: MouseEvent) {
+      if (adminRef.current && !adminRef.current.contains(e.target as Node)) setAdminOpen(false)
+    }
+    document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
+  }, [adminOpen])
 
   async function handleLogout() {
     await logout()
@@ -60,16 +72,31 @@ export default function Layout() {
             <span>{t('nav.addPet')}</span>
           </NavLink>
           {user?.role === 'admin' && (
-            <>
-              <NavLink to="/users" className={navLinkClass} onClick={closeMobileMenu}>
-                <Icon icon="mdi:account-group" width={20} height={20} />
-                <span>{t('nav.users')}</span>
-              </NavLink>
-              <NavLink to="/admin/options" className={navLinkClass} onClick={closeMobileMenu}>
-                <Icon icon="mdi:format-list-bulleted" width={20} height={20} />
-                <span>{t('nav.defaultOptions')}</span>
-              </NavLink>
-            </>
+            <div className="nav-admin" ref={adminRef}>
+              <button
+                type="button"
+                className={`nav-admin-toggle ${/^\/(users|admin\/options)/.test(location.pathname) ? 'active' : ''}`}
+                onClick={(e) => { e.stopPropagation(); setAdminOpen((o) => !o) }}
+                aria-expanded={adminOpen}
+                aria-haspopup="true"
+              >
+                <Icon icon="mdi:shield-account" width={20} height={20} />
+                <span>{t('nav.admin')}</span>
+                <Icon icon={adminOpen ? 'mdi:chevron-up' : 'mdi:chevron-down'} width={18} height={18} />
+              </button>
+              {adminOpen && (
+                <div className="nav-admin-dropdown" role="menu">
+                  <NavLink to="/users" className={navLinkClass} onClick={() => { closeMobileMenu(); setAdminOpen(false) }} role="menuitem">
+                    <Icon icon="mdi:account-group" width={20} height={20} />
+                    <span>{t('nav.users')}</span>
+                  </NavLink>
+                  <NavLink to="/admin/options" className={navLinkClass} onClick={() => { closeMobileMenu(); setAdminOpen(false) }} role="menuitem">
+                    <Icon icon="mdi:format-list-bulleted" width={20} height={20} />
+                    <span>{t('nav.defaultOptions')}</span>
+                  </NavLink>
+                </div>
+              )}
+            </div>
           )}
           <NavLink to="/settings" className={navLinkClass} onClick={closeMobileMenu}>
             <Icon icon="mdi:cog" width={20} height={20} />

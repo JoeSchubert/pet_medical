@@ -128,7 +128,9 @@ export default function Settings() {
       <p className="muted">
         {isAdminEditing ? t('settings.weightUnitHelpAdmin') : t('settings.weightUnitHelp')}
       </p>
-      <form onSubmit={handleSubmit} className="form" style={{ maxWidth: 360 }}>
+      <div className="settings-cards">
+        <div className="settings-card">
+          <form onSubmit={handleSubmit} className="form">
         {isAdminEditing && (
           <>
             <label>
@@ -202,10 +204,11 @@ export default function Settings() {
             {saving ? t('common.saving') : t('common.save')}
           </button>
         </div>
-      </form>
+          </form>
+        </div>
 
-      {!isAdminEditing && (
-        <section className="section" style={{ maxWidth: 360, marginTop: '1.5rem' }}>
+        {!isAdminEditing && (
+        <section className="section settings-card">
           <h2 style={{ marginTop: 0 }}>{t('settings.changePassword')}</h2>
           <form onSubmit={handleChangePassword} className="form">
             <label>
@@ -249,10 +252,10 @@ export default function Settings() {
             </div>
           </form>
         </section>
-      )}
+        )}
 
-      {pwa && !pwa.isStandalone && (
-        <section className="section" style={{ maxWidth: 360, marginTop: '1.5rem' }}>
+        {pwa && !pwa.isStandalone && (
+        <section className="section settings-card">
           <h2 style={{ marginTop: 0 }}>Install app</h2>
           <p className="muted">Add Pet Medical to your home screen for quick access.</p>
           {pwa.deferredPrompt ? (
@@ -276,7 +279,8 @@ export default function Settings() {
             </>
           )}
         </section>
-      )}
+        )}
+      </div>
     </div>
   )
 }

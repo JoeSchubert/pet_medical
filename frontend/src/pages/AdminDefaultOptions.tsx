@@ -19,6 +19,7 @@ export default function AdminDefaultOptions() {
   const [editValue, setEditValue] = useState('')
   const [editContext, setEditContext] = useState('')
   const [editDuration, setEditDuration] = useState<string>('')
+  const [listFilterSpecies, setListFilterSpecies] = useState('')
 
   function load() {
     setLoading(true)
@@ -34,6 +35,10 @@ export default function AdminDefaultOptions() {
   }, [])
 
   const filtered = list.filter((o) => o.option_type === tab)
+  const listBySpecies = listFilterSpecies
+    ? filtered.filter((o) => (o.context || '') === listFilterSpecies)
+    : filtered
+  const displayList = tab === 'species' ? filtered : listBySpecies
   const speciesList = list.filter((o) => o.option_type === 'species').map((o) => o.value)
 
   async function handleAdd(e: React.FormEvent) {
@@ -170,7 +175,7 @@ export default function AdminDefaultOptions() {
               value={addDuration}
               onChange={(e) => setAddDuration(e.target.value)}
               className="input"
-              style={{ width: '6rem' }}
+              style={{ width: '11rem' }}
             />
           )}
           <button type="submit" className="btn btn-primary" disabled={addSubmitting}>
@@ -180,9 +185,26 @@ export default function AdminDefaultOptions() {
       </section>
 
       <section className="section card-panel">
-        <h2>{tab === 'species' ? t('admin.listSpecies') : tab === 'breed' ? t('admin.listBreeds') : t('admin.listVaccinations')}</h2>
+        <div className="admin-options-list-header">
+          <h2 style={{ margin: 0 }}>{tab === 'species' ? t('admin.listSpecies') : tab === 'breed' ? t('admin.listBreeds') : t('admin.listVaccinations')}</h2>
+          {tab !== 'species' && (
+            <label className="admin-options-filter">
+              <span className="text-dark-text-secondary">{t('admin.filterBySpecies')}</span>
+              <select
+                value={listFilterSpecies}
+                onChange={(e) => setListFilterSpecies(e.target.value)}
+                className="admin-options-filter-select"
+              >
+                <option value="">{t('admin.allSpecies')}</option>
+                {speciesList.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </label>
+          )}
+        </div>
         <ul className="list" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-          {filtered
+          {displayList
             .sort((a, b) => (a.context || '').localeCompare(b.context || '') || a.value.localeCompare(b.value))
             .map((item) => (
               <li key={item.id} className="list-item" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
@@ -244,6 +266,9 @@ export default function AdminDefaultOptions() {
             ))}
         </ul>
         {filtered.length === 0 && <p className="muted">{t('admin.noItems')}</p>}
+        {filtered.length > 0 && displayList.length === 0 && tab !== 'species' && (
+          <p className="muted">{t('admin.noItemsForSpecies')}</p>
+        )}
       </section>
     </div>
   )

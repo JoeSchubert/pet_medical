@@ -61,6 +61,7 @@ export default function Users() {
       </header>
       <p className="muted">Manage users and roles. Only admins can access this page.</p>
 
+      <div className="users-layout">
       <section className="section card">
         <h2>Add user</h2>
         <form onSubmit={addUser} className="form-inline">
@@ -99,7 +100,7 @@ export default function Users() {
         {addError && <p className="error">{addError}</p>}
       </section>
 
-      <div className="section table-wrap">
+      <div className="section table-wrap users-table-wrap">
         <table className="data-table">
           <thead>
             <tr>
@@ -127,6 +128,7 @@ export default function Users() {
             ))}
           </tbody>
         </table>
+      </div>
       </div>
     </div>
   )

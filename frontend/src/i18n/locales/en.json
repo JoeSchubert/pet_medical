@@ -1,6 +1,7 @@
 {
   "nav.home": "Home",
   "nav.addPet": "Add Pet",
+  "nav.admin": "Admin",
   "nav.users": "Users",
   "nav.defaultOptions": "Options",
   "nav.settings": "Settings",
@@ -113,5 +114,8 @@
   "admin.listSpecies": "Species",
   "admin.listBreeds": "Breeds",
   "admin.listVaccinations": "Vaccinations",
-  "admin.noItems": "No items yet. Add one above."
+  "admin.noItems": "No items yet. Add one above.",
+  "admin.filterBySpecies": "Filter by species",
+  "admin.allSpecies": "All species",
+  "admin.noItemsForSpecies": "No items for this species."
 }
