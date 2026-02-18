@@ -70,8 +70,9 @@ func TrustedProxyAuth(cfg *config.Config, db *gorm.DB, jwt *auth.JWT, refreshSto
 				next.ServeHTTP(w, r)
 				return
 			}
-			setRefreshCookie(w, refreshToken, int(jwt.RefreshTokenDuration().Seconds()), cfg.SecureCookies, int(cfg.SameSiteCookie))
-			setAccessCookie(w, accessToken, 15*60, cfg.SecureCookies, int(cfg.SameSiteCookie))
+			secure := !cfg.Development && cfg.IsRequestHTTPS(r)
+			setRefreshCookie(w, refreshToken, int(jwt.RefreshTokenDuration().Seconds()), secure, int(cfg.SameSiteCookie))
+			setAccessCookie(w, accessToken, 15*60, secure, int(cfg.SameSiteCookie))
 			ctx := context.WithValue(r.Context(), UserContextKey, &UserInfo{
 				ID:          u.ID,
 				DisplayName: u.DisplayName,

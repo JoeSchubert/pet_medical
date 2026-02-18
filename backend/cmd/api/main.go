@@ -56,10 +56,10 @@ func main() {
 		DB:                gormDB,
 		JWT:               jwt,
 		RefreshStore:      refreshStore,
+		Config:            cfg,
 		DefaultWeightUnit: cfg.DefaultWeightUnit,
 		DefaultCurrency:   cfg.DefaultCurrency,
 		DefaultLanguage:   cfg.DefaultLanguage,
-		SecureCookies:     cfg.SecureCookies,
 		SameSiteCookie:    int(cfg.SameSiteCookie),
 	}
 	petsHandler := &handlers.PetsHandler{DB: gormDB, UploadDir: uploadDir}
@@ -173,19 +173,19 @@ func main() {
 			log.Printf("[SECURITY] WARNING: JWT_SECRET is not set; using default. Set a strong secret in production (e.g. openssl rand -base64 32).")
 		}
 		if cfg.CORSOrigins == "*" {
-			log.Printf("[SECURITY] WARNING: CORS_ORIGINS is '*' (allow all origins). For production, set explicit origins.")
+			log.Printf("[SECURITY] WARNING: CORS_ORIGINS is '*' (allow all origins). Omit CORS_ORIGINS for same-origin-only (recommended when frontend and API share a host).")
 		}
-		if len(cfg.TrustedProxies) > 0 && cfg.ForwardedEmailHeader != "" {
-			log.Printf("[SECURITY] Trusted proxy auth is enabled. Ensure only your proxy IPs are in TRUSTED_PROXIES to prevent header spoofing.")
+		if cfg.ForwardedEmailHeader != "" {
+			log.Printf("[SECURITY] Trusted proxy auth is enabled (proxy IPs from TRUSTED_PROXIES or private/loopback when TRUST_PRIVATE_PROXIES=true). Ensure only your proxy can reach the app to prevent header spoofing.")
 		}
 	}
 
 	hstsMaxAge := 0
-	if !cfg.Development && cfg.SecureCookies {
+	if !cfg.Development {
 		hstsMaxAge = 31536000 // 1 year when using HTTPS in production
 	}
 	handler := middleware.TrustedProxyAuth(cfg, gormDB, jwt, refreshStore, cfg.DefaultWeightUnit, cfg.DefaultCurrency, cfg.DefaultLanguage)(router)
-	chain := middleware.Logging(middleware.SecurityHeaders(hstsMaxAge)(middleware.CORS(cfg.CORSOrigins)(handler)))
+	chain := middleware.Logging(middleware.SecurityHeaders(hstsMaxAge)(middleware.CORS(cfg.CORSOrigins, cfg)(handler)))
 
 	addr := ":" + strconv.Itoa(cfg.ServerPort)
 	log.Printf("Listening on %s", addr)

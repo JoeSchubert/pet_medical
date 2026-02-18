@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/pet-medical/api/internal/auth"
+	"github.com/pet-medical/api/internal/config"
 	"github.com/pet-medical/api/internal/debuglog"
 	"github.com/pet-medical/api/internal/i18n"
 	"github.com/pet-medical/api/internal/middleware"
@@ -24,11 +25,11 @@ type AuthHandler struct {
 	DB                *gorm.DB
 	JWT               *auth.JWT
 	RefreshStore      *auth.RefreshStore
+	Config            *config.Config
 	DefaultWeightUnit string
 	DefaultCurrency   string
 	DefaultLanguage   string
-	SecureCookies     bool // when true, set Secure flag on cookies (use with HTTPS)
-	SameSiteCookie    int  // http.SameSite value (use SameSiteNoneMode behind some reverse proxies)
+	SameSiteCookie    int // http.SameSite value (Lax default; set SAME_SITE_COOKIE=none only if needed)
 }
 
 type LoginRequest struct {
@@ -126,8 +127,8 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.setRefreshCookie(w, refreshToken, int(h.JWT.RefreshTokenDuration().Seconds()))
-	h.setAccessCookie(w, accessToken, 15*60)
+	h.setRefreshCookie(w, r, refreshToken, int(h.JWT.RefreshTokenDuration().Seconds()))
+	h.setAccessCookie(w, r, accessToken, 15*60)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(LoginResponse{
@@ -153,7 +154,7 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	}
 	userID, err := h.RefreshStore.Consume(cookie.Value)
 	if err != nil {
-		h.clearRefreshCookie(w)
+		h.clearRefreshCookie(w, r)
 		http.Error(w, `{"error":"invalid or expired refresh token"}`, http.StatusUnauthorized)
 		return
 	}
@@ -178,8 +179,8 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
 		return
 	}
-	h.setRefreshCookie(w, newRefresh, int(h.JWT.RefreshTokenDuration().Seconds()))
-	h.setAccessCookie(w, accessToken, 15*60)
+	h.setRefreshCookie(w, r, newRefresh, int(h.JWT.RefreshTokenDuration().Seconds()))
+	h.setAccessCookie(w, r, accessToken, 15*60)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(RefreshResponse{
@@ -198,8 +199,8 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
-	h.clearRefreshCookie(w)
-	h.clearAccessCookie(w)
+	h.clearRefreshCookie(w, r)
+	h.clearAccessCookie(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"message": "logged out"})
 }
@@ -215,50 +216,54 @@ func (h *AuthHandler) sameSite() http.SameSite {
 	}
 }
 
-func (h *AuthHandler) setRefreshCookie(w http.ResponseWriter, token string, maxAge int) {
+func (h *AuthHandler) secure(r *http.Request) bool {
+	return !h.Config.Development && h.Config.IsRequestHTTPS(r)
+}
+
+func (h *AuthHandler) setRefreshCookie(w http.ResponseWriter, r *http.Request, token string, maxAge int) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     refreshCookieName,
 		Value:    token,
 		Path:     "/",
 		MaxAge:   maxAge,
 		HttpOnly: true,
-		Secure:   h.SecureCookies,
+		Secure:   h.secure(r),
 		SameSite: h.sameSite(),
 	})
 }
 
-func (h *AuthHandler) clearRefreshCookie(w http.ResponseWriter) {
+func (h *AuthHandler) clearRefreshCookie(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     refreshCookieName,
 		Value:    "",
 		Path:     "/",
 		MaxAge:   -1,
 		HttpOnly: true,
-		Secure:   h.SecureCookies,
+		Secure:   h.secure(r),
 		SameSite: h.sameSite(),
 	})
 }
 
-func (h *AuthHandler) setAccessCookie(w http.ResponseWriter, token string, maxAge int) {
+func (h *AuthHandler) setAccessCookie(w http.ResponseWriter, r *http.Request, token string, maxAge int) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     accessCookieName,
 		Value:    token,
 		Path:     "/",
 		MaxAge:   maxAge,
 		HttpOnly: true,
-		Secure:   h.SecureCookies,
+		Secure:   h.secure(r),
 		SameSite: h.sameSite(),
 	})
 }
 
-func (h *AuthHandler) clearAccessCookie(w http.ResponseWriter) {
+func (h *AuthHandler) clearAccessCookie(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     accessCookieName,
 		Value:    "",
 		Path:     "/",
 		MaxAge:   -1,
 		HttpOnly: true,
-		Secure:   h.SecureCookies,
+		Secure:   h.secure(r),
 		SameSite: h.sameSite(),
 	})
 }

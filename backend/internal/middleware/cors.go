@@ -3,22 +3,36 @@ package middleware
 import (
 	"net/http"
 	"strings"
+
+	"github.com/pet-medical/api/internal/config"
 )
 
-func CORS(origins string) func(http.Handler) http.Handler {
-	allowed := strings.Split(origins, ",")
-	for i := range allowed {
-		allowed[i] = strings.TrimSpace(allowed[i])
+// CORS sets Access-Control-Allow-* when the request Origin is allowed.
+// When origins is empty and cfg is non-nil, only the request's effective origin is allowed (same-origin when behind a proxy; no CORS_ORIGINS env needed).
+// When origins is set, it is a comma-separated list of allowed origins, or "*" for any.
+func CORS(origins string, cfg *config.Config) func(http.Handler) http.Handler {
+	var allowed []string
+	if origins != "" {
+		allowed = strings.Split(origins, ",")
+		for i := range allowed {
+			allowed[i] = strings.TrimSpace(allowed[i])
+		}
 	}
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			origin := r.Header.Get("Origin")
 			allowOrigin := ""
 			if origin != "" {
-				for _, o := range allowed {
-					if o == "*" || o == origin {
-						allowOrigin = o
-						break
+				if len(allowed) == 0 && cfg != nil {
+					if cfg.RequestOrigin(r) == origin {
+						allowOrigin = origin
+					}
+				} else {
+					for _, o := range allowed {
+						if o == "*" || o == origin {
+							allowOrigin = o
+							break
+						}
 					}
 				}
 			}

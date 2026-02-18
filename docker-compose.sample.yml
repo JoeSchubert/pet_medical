@@ -23,16 +23,15 @@ services:
       DEVELOPMENT: "${DEVELOPMENT:-false}"
       # Secret used to sign JWT access tokens. Use a long random value in production (e.g. openssl rand -base64 32).
       JWT_SECRET: "${JWT_SECRET:-change-me-in-production-min-32-chars}"
-      # When DEVELOPMENT is false: set to true when serving over HTTPS (cookies Secure flag). Defaults to true in production. Ignored when DEVELOPMENT=true.
-      SECURE_COOKIES: "${SECURE_COOKIES:-true}"
+      # Cookie Secure flag is set automatically from the request: HTTPS (direct TLS or X-Forwarded-Proto: https from a trusted proxy). No env needed when behind a reverse proxy that sets X-Forwarded-Proto.
       # Access token lifetime in minutes (default: 30).
       JWT_ACCESS_TTL_MIN: "${JWT_ACCESS_TTL_MIN:-30}"
       # Refresh token lifetime in days (default: 7).
       JWT_REFRESH_TTL_DAYS: "${JWT_REFRESH_TTL_DAYS:-7}"
 
       # ----- CORS -----
-      # Comma-separated list of allowed origins for CORS, or * for any. Example: https://app.example.com,https://www.example.com
-      CORS_ORIGINS: "${CORS_ORIGINS:-*}"
+      # When unset, only the request's effective origin is allowed (same-origin when frontend and API share a host or are behind the same proxy). Set to * to allow any origin, or a comma-separated list (e.g. https://app.example.com,https://www.example.com) for cross-origin.
+      CORS_ORIGINS: "${CORS_ORIGINS:-}"
 
       # ----- Logging -----
       # Set to true, 1, or yes to enable debug logging.
@@ -61,10 +60,9 @@ services:
       GOOGLE_REDIRECT_URI: "${GOOGLE_REDIRECT_URI:-}"
 
       # ----- Trusted proxies (oauth2-proxy or other reverse proxy) -----
-      # Comma-separated IPs or CIDRs (e.g. "10.0.0.1,172.16.0.0/12"). When the request comes from one of these,
-      # the app trusts X-Forwarded-* and the forwarded auth headers below. Used to log in users by email from
-      # the proxy (find or create user, set app cookies).
+      # By default the app trusts requests from loopback and private IPs (127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16). So when behind a proxy on the same host or in a private network, no config is needed: set X-Forwarded-Proto: https and the app will set Secure cookies and trust forwarded headers. Optional: comma-separated extra IPs/CIDRs in TRUSTED_PROXIES. Set TRUST_PRIVATE_PROXIES=false to disable trusting private IPs.
       TRUSTED_PROXIES: "${TRUSTED_PROXIES:-}"
+      TRUST_PRIVATE_PROXIES: "${TRUST_PRIVATE_PROXIES:-true}"
       # Header name for email set by the proxy (default: X-Forwarded-Email).
       FORWARDED_EMAIL_HEADER: "${FORWARDED_EMAIL_HEADER:-X-Forwarded-Email}"
       # Header name for username set by the proxy (default: X-Forwarded-User).
