@@ -49,30 +49,37 @@ Environment variables can be set in `docker-compose.yml`, a `.env` file, or the 
 | `JWT_SECRET` | Secret for signing JWTs | (required in production; use e.g. `openssl rand -base64 32`) |
 | `JWT_ACCESS_TTL_MIN` | Access token lifetime (minutes) | `30` |
 | `JWT_REFRESH_TTL_DAYS` | Refresh token lifetime (days) | `7` |
-| `CORS_ORIGINS` | Allowed origins (comma-separated or `*`) | `*` |
+| **`RATE_LIMIT_AUTH_LOGIN`** | Login attempts per minute per client IP (brute-force protection) | `5` |
+| **`RATE_LIMIT_AUTH_OTHER`** | Refresh, logout, change-password requests per minute per IP | `20` |
+| **`RATE_LIMIT_API`** | Other `/api` requests per minute per IP | `120` |
+| `CORS_ORIGINS` | Leave **unset** for same-origin only (when frontend and API share a host); set to `*` or comma-separated list for cross-origin | (unset = same-origin) |
 | `ENABLE_DEBUG_LOGGING` | Enable debug logs | `false` |
 | `SYSTEM_LANGUAGE` | Backend log message language | `en` |
 | **`DEFAULT_WEIGHT_UNIT`** | Default for new users: `lbs` or `kg` | `lbs` |
 | **`DEFAULT_CURRENCY`** | Default for new users (e.g. USD, EUR) | `USD` |
 | **`DEFAULT_LANGUAGE`** | Default for new users (e.g. en, es, fr, de) | `en` |
 | `UPLOAD_DIR` | Directory for uploaded photos and documents | `./uploads` (or `/app/uploads` in Docker) |
+| **`MAX_UPLOAD_PHOTO_MB`** | Max photo upload size (MB) | `10` |
+| **`MAX_UPLOAD_DOCUMENT_MB`** | Max document upload size (MB) | `25` |
 | `GOOGLE_CLIENT_ID` | Google OAuth2 client ID (optional; e.g. for oauth2-proxy) | — |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth2 client secret (optional) | — |
 | `GOOGLE_REDIRECT_URI` | Google OAuth2 redirect URI (optional) | — |
-| **`TRUSTED_PROXIES`** | Comma-separated proxy IPs or CIDRs; when request is from one of these, forwarded auth headers (e.g. `X-Forwarded-Email`) are trusted and used to log in by email | — |
+| **`TRUSTED_PROXIES`** | Comma-separated proxy IPs or CIDRs. When **unset**, requests from loopback and private IPs are still trusted (see `TRUST_PRIVATE_PROXIES`), so no config is needed when the proxy is on the same host or in a private network. | — |
+| **`TRUST_PRIVATE_PROXIES`** | Trust requests from 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, ::1. Set to `false` to require explicit `TRUSTED_PROXIES`. | `true` |
 | **`FORWARDED_EMAIL_HEADER`** | Header name for email from proxy | `X-Forwarded-Email` |
 | **`FORWARDED_USER_HEADER`** | Header name for display name from proxy | `X-Forwarded-User` |
 | `DEVELOPMENT` | Set to `true` (or `1`/`yes`) for local dev: relaxes security (cookies not Secure, no HSTS, no JWT/CORS warnings). Default `false`. | `false` |
-| `SECURE_COOKIES` | When **not** in development: set to `true` for HTTPS so auth cookies use the Secure flag. Defaults to `true` when `DEVELOPMENT` is false. Ignored when `DEVELOPMENT=true`. | `true` (when not dev) |
-| **`SAME_SITE_COOKIE`** | Cookie SameSite: `lax`, `strict`, or `none`. Use `none` behind a reverse proxy (e.g. Kubernetes Ingress + oauth2-proxy) if you get 401s after login when navigating; requires HTTPS (Secure cookies). Default `lax`. | `lax` |
+| **`SAME_SITE_COOKIE`** | Cookie SameSite: `lax`, `strict`, or `none`. Use `none` only if needed for cross-site; requires HTTPS. Default `lax`. | `lax` |
 
-When running behind **oauth2-proxy** (or similar), set `TRUSTED_PROXIES` to the proxy’s IP or CIDR so the app trusts `X-Forwarded-Email` (and optional `X-Forwarded-User` for display name). Users are matched by email to existing accounts or auto-created with default role/settings. For Google-based proxy login, set these in the proxy; the app does not require them to run (they are optional).
+**Cookies and HTTPS**: The app does not require a `SECURE_COOKIES` env. It sets the cookie Secure flag and HSTS only when the request is HTTPS: either direct TLS or `X-Forwarded-Proto: https` from a trusted proxy. Behind a reverse proxy that sets `X-Forwarded-Proto: https`, no extra cookie/HSTS config is needed.
 
-**Production**: Do **not** set `DEVELOPMENT=true`. Set a strong `JWT_SECRET` (e.g. `openssl rand -base64 32`), restrict `CORS_ORIGINS` to your frontend origin(s), use a dedicated database and backup strategy, and change the default admin password after first login. With `DEVELOPMENT` unset or false, cookies default to Secure and the app logs warnings at startup when JWT_SECRET or CORS_ORIGINS use default/permissive values.
+When running behind **oauth2-proxy** (or similar), ensure the proxy sets `X-Forwarded-Proto: https` and (for proxy auth) `X-Forwarded-Email`. The app trusts requests from private/loopback IPs by default, so when the proxy is on the same host or in a private network, `TRUSTED_PROXIES` can be left unset. Users are matched by email to existing accounts or auto-created with default role/settings.
+
+**Production**: Do **not** set `DEVELOPMENT=true`. Set a strong `JWT_SECRET` (e.g. `openssl rand -base64 32`). Leave `CORS_ORIGINS` unset when the frontend is served from the same host (same-origin); set it only for cross-origin. Use a dedicated database and backup strategy, and change the default admin password after first login. The app logs warnings at startup when JWT_SECRET or CORS_ORIGINS use default/permissive values.
 
 **Development**: Set `DEVELOPMENT=true` (or `1`/`yes`) for local development to allow HTTP cookies, disable HSTS, and silence strict security warnings.
 
-**Kubernetes / reverse proxy**: If you see 401s after logging in when navigating (e.g. `/auth/me` or `/auth/refresh` failing), set `SAME_SITE_COOKIE=none` so the browser sends auth cookies on requests behind the proxy. Use `/health` (or `/api/health`) for liveness and readiness probes.
+**Kubernetes / reverse proxy**: Ensure the ingress or proxy sets `X-Forwarded-Proto: https` (and, if applicable, `X-Forwarded-For`). Use `/health` (or `/api/health`) for liveness and readiness probes. If you see 401s after login when navigating, set `SAME_SITE_COOKIE=none` only if your setup requires it; usually same-origin behind a proxy works with default `lax`.
 
 ## Local development
 

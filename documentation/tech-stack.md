@@ -14,6 +14,8 @@ Pet Medical is a full-stack web application: a Go API backend with a React singl
 | Database | PostgreSQL 16 | Persistent data |
 | Auth | JWT (access) + refresh tokens | Access in cookie + optional `Authorization: Bearer`; refresh in httpOnly cookie |
 | Config | Environment variables | See [README](../README.md#configuration) and `docker-compose.sample.yml` |
+| Middleware | Auth (JWT/cookie), CORS, throttle (rate limit by client IP), logging | Rate limits configurable per auth vs general API |
+| Upload limits | Photos, documents | Max sizes configurable via env (defaults: 10 MB photo, 25 MB document) |
 
 ### Backend layout
 
@@ -25,13 +27,13 @@ backend/
 │   ├── config/       # Load from env (port, DB, JWT, CORS, defaults)
 │   ├── db/           # GORM connect, AutoMigrate, seed (admin, default dropdowns)
 │   ├── handlers/     # HTTP handlers: auth, pets, vaccinations, weights, documents, photos, users, settings, options
-│   ├── middleware/   # Auth (JWT/cookie), CORS, logging
+│   ├── middleware/   # Auth (JWT/cookie), CORS, throttle (rate limit), logging
 │   ├── models/       # GORM models (User, Pet, Vaccination, WeightEntry, Document, PetPhoto, etc.)
 │   └── i18n/         # Server-side log message translation (optional)
 ```
 
 - **Static files**: Frontend is built into `backend/cmd/api/static/` at Docker build time and served by the Go server for non-API routes (SPA fallback).
-- **Uploads**: Photos and documents are stored on disk under `UPLOAD_DIR`; paths are stored in the database.
+- **Uploads**: Photos and documents are stored on disk under `UPLOAD_DIR`; paths are stored in the database. Max file sizes are enforced (configurable via `MAX_UPLOAD_PHOTO_MB` and `MAX_UPLOAD_DOCUMENT_MB`).
 
 ## Frontend
 

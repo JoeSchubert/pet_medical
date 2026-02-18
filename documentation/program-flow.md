@@ -3,15 +3,18 @@
 ## Request flow (high level)
 
 1. **Browser** loads the SPA from the Go server (or a reverse proxy). All API calls go to `/api/*`.
-2. **CORS** middleware allows configured origins (or `*`).
-3. **Logging** middleware logs the request.
-4. **Routes**:
+2. **CORS** middleware allows configured origins (or, when unset, the request’s effective origin for same-origin).
+3. **Rate limiting** (throttle) applies per client IP: stricter limits on auth endpoints (login, refresh, etc.) and a general limit on other API routes; see README for env vars.
+4. **Logging** middleware logs the request.
+5. **Routes**:
    - Public: `/api/auth/login`, `/api/auth/refresh`, `/api/auth/logout`, `/api/health`.
    - Protected: everything else under `/api` (requires valid JWT from cookie or `Authorization: Bearer`).
-5. **Auth middleware** reads the token from the `Authorization` header or the `access_token` cookie, validates it, and puts the user into the request context.
-6. **Handler** reads/writes DB (GORM) and returns JSON (or file for uploads).
+6. **Auth middleware** reads the token from the `Authorization` header or the `access_token` cookie, validates it, and puts the user into the request context.
+7. **Handler** reads/writes DB (GORM) and returns JSON (or file for uploads).
 
 ## Authentication flow
+
+Cookie Secure flag and HSTS are set only when the request is considered HTTPS (direct TLS or `X-Forwarded-Proto: https` from a trusted proxy); no separate env is required.
 
 - **Login**: POST `/api/auth/login` with email/password → server validates, creates access + refresh tokens, sets httpOnly cookies for both, returns user + access token in body. Frontend stores the access token in memory and uses it in the `Authorization` header for subsequent requests.
 - **Protected request**: Client sends cookie (and optionally `Authorization: Bearer <token>`). If the token is missing or expired (401), the frontend can call POST `/api/auth/refresh` with the refresh cookie to get new tokens and retry.
