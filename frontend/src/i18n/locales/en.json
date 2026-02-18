@@ -38,6 +38,8 @@
   "error.password_required": "Current and new password are required",
   "error.password_too_short": "New password must be at least 8 characters",
   "error.no_password_account": "This account has no password (signed in with another provider)",
+  "error.too_many_requests": "Too many requests. Please try again later.",
+  "error.upload_too_large": "File is too large. Please choose a smaller file.",
 
   "login.title": "Log in",
   "login.username": "Username",

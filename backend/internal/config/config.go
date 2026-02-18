@@ -54,6 +54,13 @@ type Config struct {
 	SameSiteCookie http.SameSite
 	// Development: when true, relaxes security (no Secure cookies, no HSTS, no startup warnings for default JWT/CORS). Default false.
 	Development bool
+	// Rate limits (requests per minute per client IP). 0 = use middleware default.
+	RateLimitAuthLoginPerMin int // login (brute-force protection). Default 5.
+	RateLimitAuthOtherPerMin int // refresh, logout. Default 20.
+	RateLimitAPIPerMin       int // rest of /api. Default 120.
+	// Max upload sizes in bytes. 0 = use default (10MB photos, 25MB documents).
+	MaxUploadPhotoBytes    int64
+	MaxUploadDocumentBytes int64
 }
 
 func Load() *Config {
@@ -118,6 +125,19 @@ func Load() *Config {
 	trustPrivate := parseBoolEnv("TRUST_PRIVATE_PROXIES", true)
 	development := parseBoolEnv("DEVELOPMENT", false)
 	sameSite := parseSameSiteEnv(os.Getenv("SAME_SITE_COOKIE"))
+	rateLimitLogin := parseIntEnv("RATE_LIMIT_AUTH_LOGIN", 5)
+	rateLimitAuthOther := parseIntEnv("RATE_LIMIT_AUTH_OTHER", 20)
+	rateLimitAPI := parseIntEnv("RATE_LIMIT_API", 120)
+	maxPhotoMB := parseIntEnv("MAX_UPLOAD_PHOTO_MB", 10)
+	maxDocMB := parseIntEnv("MAX_UPLOAD_DOCUMENT_MB", 25)
+	maxPhotoBytes := int64(maxPhotoMB) * 1024 * 1024
+	maxDocBytes := int64(maxDocMB) * 1024 * 1024
+	if maxPhotoBytes <= 0 {
+		maxPhotoBytes = 10 * 1024 * 1024
+	}
+	if maxDocBytes <= 0 {
+		maxDocBytes = 25 * 1024 * 1024
+	}
 	return &Config{
 		ServerPort:           port,
 		DBURL:                dbURL,
@@ -137,9 +157,26 @@ func Load() *Config {
 		TrustPrivateProxies:  trustPrivate,
 		ForwardedEmailHeader: forwardedEmail,
 		ForwardedUserHeader:  forwardedUser,
-		SameSiteCookie:       sameSite,
-		Development:          development,
+		SameSiteCookie:             sameSite,
+		Development:                development,
+		RateLimitAuthLoginPerMin:    rateLimitLogin,
+		RateLimitAuthOtherPerMin:    rateLimitAuthOther,
+		RateLimitAPIPerMin:          rateLimitAPI,
+		MaxUploadPhotoBytes:         maxPhotoBytes,
+		MaxUploadDocumentBytes:      maxDocBytes,
 	}
+}
+
+func parseIntEnv(key string, defaultVal int) int {
+	v := strings.TrimSpace(os.Getenv(key))
+	if v == "" {
+		return defaultVal
+	}
+	n, err := strconv.Atoi(v)
+	if err != nil || n < 0 {
+		return defaultVal
+	}
+	return n
 }
 
 // parseBoolEnv returns true if the env var is set to 1, true, or yes (case-insensitive). Otherwise returns defaultVal.
@@ -252,4 +289,23 @@ func (c *Config) RequestOrigin(r *http.Request) string {
 		}
 	}
 	return scheme + "://" + host
+}
+
+// ClientIP returns the client IP for the request, using X-Forwarded-For when from a trusted proxy (first listed IP).
+func (c *Config) ClientIP(r *http.Request) string {
+	if c.IsTrustedProxy(r.RemoteAddr) {
+		if xff := strings.TrimSpace(r.Header.Get("X-Forwarded-For")); xff != "" {
+			if i := strings.Index(xff, ","); i >= 0 {
+				xff = strings.TrimSpace(xff[:i])
+			}
+			if xff != "" {
+				return xff
+			}
+		}
+	}
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
+	}
+	return host
 }

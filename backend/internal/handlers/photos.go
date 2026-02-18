@@ -19,8 +19,9 @@ import (
 )
 
 type PhotosHandler struct {
-	DB        *gorm.DB
-	UploadDir string
+	DB             *gorm.DB
+	UploadDir      string
+	MaxPhotoBytes  int64 // max upload size; 0 = use default 10MB
 }
 
 func (h *PhotosHandler) ensurePetOwnership(r *http.Request, petID uuid.UUID) bool {
@@ -87,7 +88,11 @@ func (h *PhotosHandler) Upload(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
 		return
 	}
-	if err := r.ParseMultipartForm(32 << 20); err != nil {
+	maxBytes := h.MaxPhotoBytes
+	if maxBytes <= 0 {
+		maxBytes = 10 * 1024 * 1024 // 10 MB default
+	}
+	if err := r.ParseMultipartForm(maxBytes + 1024); err != nil {
 		http.Error(w, `{"error":"invalid multipart"}`, http.StatusBadRequest)
 		return
 	}
@@ -97,6 +102,10 @@ func (h *PhotosHandler) Upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
+	if header.Size > 0 && header.Size > maxBytes {
+		http.Error(w, `{"error":"error.upload_too_large"}`, http.StatusRequestEntityTooLarge)
+		return
+	}
 
 	headerBuf := make([]byte, upload.MaxHeaderBytes)
 	n, _ := io.ReadFull(file, headerBuf)
@@ -119,7 +128,11 @@ func (h *PhotosHandler) Upload(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"save failed"}`, http.StatusInternalServerError)
 		return
 	}
-	out, err := io.ReadAll(io.MultiReader(bytes.NewReader(headerBytes), file))
+	remaining := maxBytes - int64(len(headerBytes))
+	if remaining < 0 {
+		remaining = 0
+	}
+	out, err := io.ReadAll(io.MultiReader(bytes.NewReader(headerBytes), io.LimitReader(file, remaining)))
 	if err != nil {
 		http.Error(w, `{"error":"save failed"}`, http.StatusInternalServerError)
 		return

@@ -28,6 +28,7 @@ type DocumentUpdateStore interface {
 type DocumentsHandler struct {
 	DB                  *gorm.DB
 	UploadDir           string
+	MaxDocumentBytes    int64 // max upload size; 0 = use default 25MB
 	DocumentUpdateStore DocumentUpdateStore // when non-nil, Update uses this instead of DB
 }
 
@@ -130,7 +131,11 @@ func (h *DocumentsHandler) Create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
 		return
 	}
-	if err := r.ParseMultipartForm(32 << 20); err != nil {
+	maxBytes := h.MaxDocumentBytes
+	if maxBytes <= 0 {
+		maxBytes = 25 * 1024 * 1024 // 25 MB default
+	}
+	if err := r.ParseMultipartForm(maxBytes + 1024); err != nil {
 		http.Error(w, `{"error":"invalid multipart"}`, http.StatusBadRequest)
 		return
 	}
@@ -141,6 +146,10 @@ func (h *DocumentsHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
+	if header.Size > 0 && header.Size > maxBytes {
+		http.Error(w, `{"error":"error.upload_too_large"}`, http.StatusRequestEntityTooLarge)
+		return
+	}
 
 	headerBuf := make([]byte, upload.MaxHeaderBytes)
 	n, _ := io.ReadFull(file, headerBuf)
@@ -156,7 +165,12 @@ func (h *DocumentsHandler) Create(w http.ResponseWriter, r *http.Request) {
 	relPath := filepath.Join("documents", petID.String(), uuid.New().String()+"_"+safeName)
 	relPath = filepath.ToSlash(relPath)
 	absPath := filepath.Join(h.UploadDir, relPath)
-	if err := saveUpload(io.MultiReader(bytes.NewReader(headerBytes), file), absPath); err != nil {
+	remaining := maxBytes - int64(len(headerBytes))
+	if remaining < 0 {
+		remaining = 0
+	}
+	body := io.LimitReader(file, remaining)
+	if err := saveUpload(io.MultiReader(bytes.NewReader(headerBytes), body), absPath); err != nil {
 		http.Error(w, `{"error":"save failed"}`, http.StatusInternalServerError)
 		return
 	}

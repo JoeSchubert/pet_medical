@@ -65,8 +65,8 @@ func main() {
 	petsHandler := &handlers.PetsHandler{DB: gormDB, UploadDir: uploadDir}
 	vaccHandler := &handlers.VaccinationsHandler{DB: gormDB}
 	weightsHandler := &handlers.WeightsHandler{DB: gormDB}
-	docsHandler := &handlers.DocumentsHandler{DB: gormDB, UploadDir: uploadDir}
-	photosHandler := &handlers.PhotosHandler{DB: gormDB, UploadDir: uploadDir}
+	docsHandler := &handlers.DocumentsHandler{DB: gormDB, UploadDir: uploadDir, MaxDocumentBytes: cfg.MaxUploadDocumentBytes}
+	photosHandler := &handlers.PhotosHandler{DB: gormDB, UploadDir: uploadDir, MaxPhotoBytes: cfg.MaxUploadPhotoBytes}
 	usersHandler := &handlers.UsersHandler{
 		DB:                gormDB,
 		DefaultWeightUnit: cfg.DefaultWeightUnit,
@@ -185,7 +185,8 @@ func main() {
 		hstsMaxAge = 31536000 // 1 year when using HTTPS in production
 	}
 	handler := middleware.TrustedProxyAuth(cfg, gormDB, jwt, refreshStore, cfg.DefaultWeightUnit, cfg.DefaultCurrency, cfg.DefaultLanguage)(router)
-	chain := middleware.Logging(middleware.SecurityHeaders(hstsMaxAge)(middleware.CORS(cfg.CORSOrigins, cfg)(handler)))
+	throttled := middleware.ThrottleByPath(cfg, cfg.RateLimitAuthLoginPerMin, cfg.RateLimitAuthOtherPerMin, cfg.RateLimitAPIPerMin)(handler)
+	chain := middleware.Logging(middleware.SecurityHeaders(hstsMaxAge, cfg)(middleware.CORS(cfg.CORSOrigins, cfg)(throttled)))
 
 	addr := ":" + strconv.Itoa(cfg.ServerPort)
 	log.Printf("Listening on %s", addr)

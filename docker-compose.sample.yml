@@ -29,6 +29,11 @@ services:
       # Refresh token lifetime in days (default: 7).
       JWT_REFRESH_TTL_DAYS: "${JWT_REFRESH_TTL_DAYS:-7}"
 
+      # ----- Rate limiting (per client IP) -----
+      RATE_LIMIT_AUTH_LOGIN: "${RATE_LIMIT_AUTH_LOGIN:-5}"
+      RATE_LIMIT_AUTH_OTHER: "${RATE_LIMIT_AUTH_OTHER:-20}"
+      RATE_LIMIT_API: "${RATE_LIMIT_API:-120}"
+
       # ----- CORS -----
       # When unset, only the request's effective origin is allowed (same-origin when frontend and API share a host or are behind the same proxy). Set to * to allow any origin, or a comma-separated list (e.g. https://app.example.com,https://www.example.com) for cross-origin.
       CORS_ORIGINS: "${CORS_ORIGINS:-}"
@@ -50,6 +55,9 @@ services:
       # ----- File storage -----
       # Directory where uploaded photos and documents are stored. Must be writable by the app.
       UPLOAD_DIR: "/app/uploads"
+      # Max upload size for photos in MB (default 10). Documents use MAX_UPLOAD_DOCUMENT_MB (default 25).
+      MAX_UPLOAD_PHOTO_MB: "${MAX_UPLOAD_PHOTO_MB:-10}"
+      MAX_UPLOAD_DOCUMENT_MB: "${MAX_UPLOAD_DOCUMENT_MB:-25}"
 
       # ----- Google OAuth (e.g. for oauth2-proxy or app-side OAuth) -----
       # Client ID from Google Cloud Console (OAuth 2.0 Web client).
