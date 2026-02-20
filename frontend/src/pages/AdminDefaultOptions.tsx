@@ -114,24 +114,26 @@ export default function AdminDefaultOptions() {
     setEditDuration(item.duration_months != null ? String(item.duration_months) : '')
   }
 
-  if (loading) return <div className="page"><p className="text-dark-text-secondary">Loading…</p></div>
+  if (loading) return <div className="page"><p className="text-dark-text-secondary" role="status">Loading…</p></div>
 
   return (
-    <div className="page">
+    <div className="page" aria-label="Default options">
       <header className="page-header">
-        <h1>{t('admin.defaultOptionsTitle')}</h1>
+        <h1 id="admin-options-title">{t('admin.defaultOptionsTitle')}</h1>
       </header>
       <p className="muted" style={{ marginBottom: '1rem' }}>
         {t('admin.defaultOptionsHelp')}
       </p>
 
-      {error && <div className="toast toast-info" style={{ borderColor: 'var(--dark-accent)' }}>{error}</div>}
+      {error && <div className="toast toast-info" style={{ borderColor: 'var(--dark-accent)' }} role="alert">{error}</div>}
 
-      <div className="admin-options-tabs">
+      <div className="admin-options-tabs" role="tablist" aria-label="Options type">
         {(['species', 'breed', 'vaccination'] as const).map((tabKey) => (
           <button
             key={tabKey}
             type="button"
+            role="tab"
+            aria-selected={tab === tabKey}
             className={`btn ${tab === tabKey ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => setTab(tabKey)}
           >
@@ -140,8 +142,8 @@ export default function AdminDefaultOptions() {
         ))}
       </div>
 
-      <section className="section card-panel">
-        <h2>
+      <section className="section card-panel" aria-labelledby="admin-add-heading">
+        <h2 id="admin-add-heading">
           {tab === 'species' ? t('admin.addSpecies') : tab === 'breed' ? t('admin.addBreed') : t('admin.addVaccination')}
         </h2>
         <form onSubmit={handleAdd} className="form-inline" style={{ flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
@@ -152,6 +154,7 @@ export default function AdminDefaultOptions() {
               className="input"
               required
               title="Species"
+              aria-label={t('admin.selectSpecies')}
             >
               <option value="">— {t('admin.selectSpecies')} —</option>
               {speciesList.map((s) => (
@@ -166,6 +169,7 @@ export default function AdminDefaultOptions() {
             onChange={(e) => setAddValue(e.target.value)}
             className="input"
             style={{ minWidth: '12rem' }}
+            aria-label={tab === 'species' ? t('admin.addSpecies') : tab === 'breed' ? t('admin.addBreed') : t('admin.addVaccination')}
           />
           {tab === 'vaccination' && (
             <input
@@ -176,9 +180,10 @@ export default function AdminDefaultOptions() {
               onChange={(e) => setAddDuration(e.target.value)}
               className="input"
               style={{ width: '11rem' }}
+              aria-label={t('admin.durationMonths')}
             />
           )}
-          <button type="submit" className="btn btn-primary" disabled={addSubmitting}>
+          <button type="submit" className="btn btn-primary" disabled={addSubmitting} aria-busy={addSubmitting}>
             {addSubmitting ? t('common.saving') : t('common.add')}
           </button>
         </form>
@@ -188,12 +193,14 @@ export default function AdminDefaultOptions() {
         <div className="admin-options-list-header">
           <h2 style={{ margin: 0 }}>{tab === 'species' ? t('admin.listSpecies') : tab === 'breed' ? t('admin.listBreeds') : t('admin.listVaccinations')}</h2>
           {tab !== 'species' && (
-            <label className="admin-options-filter">
+            <label className="admin-options-filter" htmlFor="admin-options-filter-species">
               <span className="text-dark-text-secondary">{t('admin.filterBySpecies')}</span>
               <select
+                id="admin-options-filter-species"
                 value={listFilterSpecies}
                 onChange={(e) => setListFilterSpecies(e.target.value)}
                 className="admin-options-filter-select"
+                aria-label={t('admin.filterBySpecies')}
               >
                 <option value="">{t('admin.allSpecies')}</option>
                 {speciesList.map((s) => (

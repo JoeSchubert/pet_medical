@@ -96,38 +96,40 @@ export default function Dashboard() {
   })
 
   return (
-    <div className="page">
+    <div className="page" aria-label="Dashboard">
       <header className="page-header">
-        <h1 className="text-xl font-bold text-dark-primary flex items-center gap-2">
-          <Icon icon="mdi:heart" className="text-red-400" width={28} height={28} />
+        <h1 id="dashboard-title" className="text-xl font-bold text-dark-primary flex items-center gap-2">
+          <Icon icon="mdi:heart" className="text-red-400" width={28} height={28} aria-hidden />
           My Pets
         </h1>
       </header>
 
       {loading ? (
-        <p className="text-dark-text-secondary">Loading…</p>
+        <p className="text-dark-text-secondary" role="status" aria-live="polite">Loading…</p>
       ) : (
         <div className="card-panel">
           <div className="dashboard-pets-header">
-            <h2 className="text-lg font-bold text-dark-primary flex items-center gap-2">
-              <Icon icon="mdi:paw" width={24} height={24} className="text-blue-400" />
+            <h2 id="dashboard-pets-heading" className="text-lg font-bold text-dark-primary flex items-center gap-2">
+              <Icon icon="mdi:paw" width={24} height={24} className="text-blue-400" aria-hidden />
               Your pets ({pets.length})
             </h2>
-            <div className="dashboard-controls" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+            <div className="dashboard-controls" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }} role="search" aria-label="Filter and sort pets">
               <input
+                id="dashboard-search"
                 type="text"
                 placeholder="Search name, species, breed, age..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 style={{ minWidth: 200 }}
+                aria-label="Search pets by name, species, breed, or age"
               />
-              <select value={sortBy} onChange={(e) => setSortBy(e.target.value as SortOption)} style={{ width: 'auto' }}>
+              <select id="dashboard-sort" value={sortBy} onChange={(e) => setSortBy(e.target.value as SortOption)} style={{ width: 'auto' }} aria-label="Sort pets by">
                 <option value="name">Sort by name</option>
                 <option value="species">Sort by species</option>
                 <option value="age">Sort by age</option>
               </select>
               <Link to="/pets/new" className="btn btn-primary btn-sm" style={{ marginLeft: 'auto' }}>
-                <Icon icon="mdi:plus" width={18} height={18} />
+                <Icon icon="mdi:plus" width={18} height={18} aria-hidden />
                 Add Pet
               </Link>
             </div>
@@ -148,28 +150,28 @@ export default function Dashboard() {
               <ul className="pet-grid">
                 {sortedPets.map((pet) => (
                   <li key={pet.id}>
-                    <Link to={`/pets/${pet.id}`} className="pet-card pet-card-horizontal">
+                    <Link to={`/pets/${pet.id}`} className="pet-card pet-card-horizontal" aria-label={`View ${pet.name || 'pet'}`}>
                       <div className="pet-card-image">
                         {petImageUrl(pet) ? (
-                          <img src={petImageUrl(pet)!} alt="" />
+                          <img src={petImageUrl(pet)!} alt="" role="presentation" />
                         ) : (
-                          <span className="pet-card-placeholder">{getSpeciesEmoji(pet.species)}</span>
+                          <span className="pet-card-placeholder" aria-hidden>{getSpeciesEmoji(pet.species)}</span>
                         )}
                       </div>
                       <div className="pet-card-body">
                         <h3 className="meta-line">
-                          <Icon icon="mdi:tag" width={14} height={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                          <Icon icon="mdi:tag" width={14} height={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden />
                           {pet.name}
                         </h3>
                         {pet.species && (
                           <p className="meta">
-                            <Icon icon="mdi:dog" width={14} height={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                            <Icon icon="mdi:dog" width={14} height={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden />
                             {pet.species}
                           </p>
                         )}
                         {pet.breed && (
                           <p className="meta">
-                            <Icon icon="mdi:shape" width={14} height={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                            <Icon icon="mdi:shape" width={14} height={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden />
                             {pet.breed}
                           </p>
                         )}
@@ -189,12 +191,12 @@ export default function Dashboard() {
                           return (
                             <>
                               <p className="meta">
-                                <Icon icon="mdi:calendar" width={14} height={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                                <Icon icon="mdi:calendar" width={14} height={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden />
                                 {dateStr}
                               </p>
                               {ageStr && (
                                 <p className="meta">
-                                  <Icon icon="mdi:calendar-clock" width={14} height={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                                  <Icon icon="mdi:calendar-clock" width={14} height={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden />
                                   {ageStr}
                                 </p>
                               )}
@@ -205,7 +207,7 @@ export default function Dashboard() {
                           const d = weightToDisplay(latestWeight[pet.id], weightUnit)
                           return (
                             <p className="meta">
-                              <Icon icon="mdi:scale-balance" width={14} height={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                              <Icon icon="mdi:scale-balance" width={14} height={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden />
                               {d.value} {d.unit}
                             </p>
                           )

@@ -51,57 +51,63 @@ export default function Users() {
     }
   }
 
-  if (loading) return <div className="page"><p>Loading…</p></div>
-  if (error) return <div className="page"><p className="error">{error}</p></div>
+  if (loading) return <div className="page"><p role="status">Loading…</p></div>
+  if (error) return <div className="page"><p className="error" role="alert">{error}</p></div>
 
   return (
-    <div className="page">
+    <div className="page" aria-label="User management">
       <header className="page-header">
-        <h1>User management</h1>
+        <h1 id="users-title">User management</h1>
       </header>
       <p className="muted">Manage users and roles. Only admins can access this page.</p>
 
       <div className="users-layout">
-      <section className="section card">
-        <h2>Add user</h2>
-        <form onSubmit={addUser} className="form-inline">
+      <section className="section card" aria-labelledby="users-add-heading">
+        <h2 id="users-add-heading">Add user</h2>
+        <form onSubmit={addUser} className="form-inline" aria-describedby={addError ? 'users-add-error' : undefined}>
           <input
+            id="users-add-display-name"
             type="text"
             placeholder={t('common.displayName')}
             value={addDisplayName}
             onChange={(e) => setAddDisplayName(e.target.value)}
             className="input"
             autoComplete="name"
+            aria-label={t('common.displayName')}
           />
           <input
+            id="users-add-email"
             type="email"
             placeholder="Email"
             value={addEmail}
             onChange={(e) => setAddEmail(e.target.value)}
             className="input"
             autoComplete="email"
+            aria-label="Email"
           />
           <input
+            id="users-add-password"
             type="password"
             placeholder="Password"
             value={addPassword}
             onChange={(e) => setAddPassword(e.target.value)}
             className="input"
             autoComplete="new-password"
+            aria-label="Password"
           />
-          <select value={addRole} onChange={(e) => setAddRole(e.target.value)} className="input">
+          <select id="users-add-role" value={addRole} onChange={(e) => setAddRole(e.target.value)} className="input" aria-label="Role">
             <option value="user">user</option>
             <option value="admin">admin</option>
           </select>
-          <button type="submit" className="btn btn-primary" disabled={addSubmitting}>
+          <button type="submit" className="btn btn-primary" disabled={addSubmitting} aria-busy={addSubmitting}>
             {addSubmitting ? 'Adding…' : 'Add user'}
           </button>
         </form>
-        {addError && <p className="error">{addError}</p>}
+        {addError && <p id="users-add-error" className="error" role="alert">{addError}</p>}
       </section>
 
-      <div className="section table-wrap users-table-wrap">
-        <table className="data-table">
+      <div className="section table-wrap users-table-wrap" role="region" aria-labelledby="users-title">
+        <table className="data-table" aria-label="Users list">
           <thead>
             <tr>
               <th>{t('common.displayName')}</th>
@@ -119,8 +125,8 @@ export default function Users() {
                 <td>{u.role}</td>
                 <td>{new Date(u.created_at).toLocaleDateString()}</td>
                 <td>
-                  <Link to={`/settings/${u.id}`} className="btn btn-sm btn-secondary" title="Settings">
-                    <Icon icon="mdi:cog" width={16} height={16} />
+                  <Link to={`/settings/${u.id}`} className="btn btn-sm btn-secondary" title="Settings" aria-label={`Settings for ${u.display_name}`}>
+                    <Icon icon="mdi:cog" width={16} height={16} aria-hidden />
                     Settings
                   </Link>
                 </td>

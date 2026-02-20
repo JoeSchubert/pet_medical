@@ -29,7 +29,17 @@ This application was inspired by [Robipet](https://github.com/Anghios/robipet), 
    ```
    On subsequent runs, the script stops existing containers and can optionally remove the database volume.
 
-2. Open **http://localhost:8080** and sign in with **Email** `admin@example.com` and **Password** `admin123`.
+2. Open **http://localhost:8080** and sign in with **Email** `admin@example.com` and **Password** `admin123`. On a fresh database, demo data is seeded: several pets (with free Unsplash photos), vaccinations, and weights for the admin, plus a second user **Jane** (`jane@example.com` / `demo123`) with her own pets.
+
+## Screenshots
+
+| Login | Dashboard | Pet detail |
+|-------|-----------|------------|
+| ![Login](documentation/screenshots/login.png) | ![Dashboard](documentation/screenshots/dashboard.png) | ![Pet detail](documentation/screenshots/pet-detail.png) |
+
+*Sign in with email and password; the dashboard shows your pets (demo pets are seeded on a fresh DB). Open a pet to see vaccinations, weight, documents, and photos.*
+
+More screenshots and how to capture them: [documentation/screenshots](documentation/screenshots.md).
 
 ## Scripts
 
@@ -99,3 +109,4 @@ Detailed documentation lives in the **[documentation/](documentation/)** folder:
 - [Tech stack](documentation/tech-stack.md) — Backend and frontend technologies and structure.
 - [Program flow & architecture](documentation/program-flow.md) — Request flow, auth, and data flow.
 - [Flowcharts](documentation/flowcharts.md) — Mermaid diagrams for auth, pet management, and deployment.
+- [Screenshots](documentation/screenshots.md) — UI screenshots (login and others) for docs and README.

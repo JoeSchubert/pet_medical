@@ -109,15 +109,15 @@ export default function Settings() {
     }
   }
 
-  if (loading) return <div className="page"><p>{t('common.loading')}</p></div>
-  if (error) return <div className="page"><p className="error">{error}</p></div>
+  if (loading) return <div className="page"><p role="status">{t('common.loading')}</p></div>
+  if (error) return <div className="page"><p className="error" role="alert">{error}</p></div>
   if (!settings) return null
 
   return (
-    <div className="page">
+    <div className="page" aria-label="Settings">
       <header className="page-header">
-        <h1>
-          <Icon icon="mdi:cog" width={28} height={28} style={{ verticalAlign: 'middle', marginRight: 8 }} />
+        <h1 id="settings-title">
+          <Icon icon="mdi:cog" width={28} height={28} style={{ verticalAlign: 'middle', marginRight: 8 }} aria-hidden />
           {isAdminEditing && (settings.display_name !== undefined || settings.email !== undefined)
             ? t('settings.forUserDisplay', { displayName: settings.display_name ?? '', email: settings.email ?? '' })
             : isAdminEditing
@@ -130,12 +130,13 @@ export default function Settings() {
       </p>
       <div className="settings-cards">
         <div className="settings-card">
-          <form onSubmit={handleSubmit} className="form">
+          <form onSubmit={handleSubmit} className="form" aria-labelledby="settings-title">
         {isAdminEditing && (
           <>
-            <label>
+            <label htmlFor="settings-email">
               Email
               <input
+                id="settings-email"
                 type="email"
                 value={settings.email ?? ''}
                 onChange={(e) => setSettings((s) => s && { ...s, email: e.target.value })}
@@ -143,28 +144,31 @@ export default function Settings() {
                 placeholder="user@example.com"
               />
             </label>
-            <label>
+            <label htmlFor="settings-role">
               Role
               <select
+                id="settings-role"
                 value={settings.role ?? 'user'}
                 onChange={(e) => setSettings((s) => s && { ...s, role: e.target.value })}
                 disabled={settings.is_only_admin}
                 title={settings.is_only_admin ? 'Cannot remove the only admin' : undefined}
+                aria-describedby={settings.is_only_admin ? 'settings-role-desc' : undefined}
               >
                 <option value="user">user</option>
                 <option value="admin">admin</option>
               </select>
               {settings.is_only_admin && (
-                <span className="muted" style={{ fontSize: '0.875rem', display: 'block', marginTop: 4 }}>
+                <span id="settings-role-desc" className="muted" style={{ fontSize: '0.875rem', display: 'block', marginTop: 4 }}>
                   Cannot change role; this is the only admin.
                 </span>
               )}
             </label>
           </>
         )}
-        <label>
+        <label htmlFor="settings-weight-unit">
           {t('settings.weightUnit')}
           <select
+            id="settings-weight-unit"
             value={settings.weight_unit}
             onChange={(e) => setSettings((s) => s && { ...s, weight_unit: e.target.value as WeightUnit })}
           >
@@ -172,9 +176,10 @@ export default function Settings() {
             <option value="kg">{t('settings.kilograms')}</option>
           </select>
         </label>
-        <label>
+        <label htmlFor="settings-currency">
           {t('settings.currency')}
           <select
+            id="settings-currency"
             value={settings.currency || 'USD'}
             onChange={(e) => setSettings((s) => s && { ...s, currency: e.target.value })}
           >
@@ -186,9 +191,10 @@ export default function Settings() {
             <option value="JPY">JPY</option>
           </select>
         </label>
-        <label>
+        <label htmlFor="settings-language">
           {t('settings.language')}
           <select
+            id="settings-language"
             value={settings.language || 'en'}
             onChange={(e) => setSettings((s) => s && { ...s, language: e.target.value })}
           >
@@ -198,9 +204,9 @@ export default function Settings() {
             <option value="de">Deutsch</option>
           </select>
         </label>
-        {message && <p className="message" style={{ color: 'var(--dark-accent)' }}>{t(message)}</p>}
+        {message && <p className="message" style={{ color: 'var(--dark-accent)' }} role="status">{t(message)}</p>}
         <div className="form-actions">
-          <button type="submit" className="btn btn-primary" disabled={saving}>
+          <button type="submit" className="btn btn-primary" disabled={saving} aria-busy={saving}>
             {saving ? t('common.saving') : t('common.save')}
           </button>
         </div>
@@ -208,12 +214,13 @@ export default function Settings() {
         </div>
 
         {!isAdminEditing && (
-        <section className="section settings-card">
-          <h2 style={{ marginTop: 0 }}>{t('settings.changePassword')}</h2>
+        <section className="section settings-card" aria-labelledby="settings-password-heading">
+          <h2 id="settings-password-heading" style={{ marginTop: 0 }}>{t('settings.changePassword')}</h2>
           <form onSubmit={handleChangePassword} className="form">
-            <label>
+            <label htmlFor="settings-current-password">
               {t('settings.currentPassword')}
               <input
+                id="settings-current-password"
                 type="password"
                 value={passwordCurrent}
                 onChange={(e) => setPasswordCurrent(e.target.value)}
@@ -221,20 +228,23 @@ export default function Settings() {
                 required
               />
             </label>
-            <label>
+            <label htmlFor="settings-new-password">
               {t('settings.newPassword')}
               <input
+                id="settings-new-password"
                 type="password"
                 value={passwordNew}
                 onChange={(e) => setPasswordNew(e.target.value)}
                 autoComplete="new-password"
                 minLength={8}
                 required
+                aria-describedby={passwordError ? 'settings-password-error' : undefined}
               />
             </label>
-            <label>
+            <label htmlFor="settings-confirm-password">
               {t('settings.confirmPassword')}
               <input
+                id="settings-confirm-password"
                 type="password"
                 value={passwordConfirm}
                 onChange={(e) => setPasswordConfirm(e.target.value)}
@@ -243,10 +253,10 @@ export default function Settings() {
                 required
               />
             </label>
-            {passwordError && <p className="error">{passwordError}</p>}
-            {passwordMessage && <p className="message" style={{ color: 'var(--dark-accent)' }}>{passwordMessage}</p>}
+            {passwordError && <p id="settings-password-error" className="error" role="alert">{passwordError}</p>}
+            {passwordMessage && <p className="message" style={{ color: 'var(--dark-accent)' }} role="status">{t(passwordMessage)}</p>}
             <div className="form-actions">
-              <button type="submit" className="btn btn-primary" disabled={passwordChanging}>
+              <button type="submit" className="btn btn-primary" disabled={passwordChanging} aria-busy={passwordChanging}>
                 {passwordChanging ? t('common.saving') : t('settings.changePassword')}
               </button>
             </div>
@@ -255,8 +265,8 @@ export default function Settings() {
         )}
 
         {pwa && !pwa.isStandalone && (
-        <section className="section settings-card">
-          <h2 style={{ marginTop: 0 }}>Install app</h2>
+        <section className="section settings-card" aria-labelledby="settings-install-heading">
+          <h2 id="settings-install-heading" style={{ marginTop: 0 }}>Install app</h2>
           <p className="muted">Add Pet Medical to your home screen for quick access.</p>
           {pwa.deferredPrompt ? (
             <button type="button" className="btn btn-primary" onClick={async () => { await pwa.deferredPrompt!.prompt(); pwa.setDismissed(true) }}>

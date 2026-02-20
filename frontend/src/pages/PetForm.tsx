@@ -80,7 +80,7 @@ export default function PetForm() {
   }
 
   if (loading) {
-    return <div className="page"><p className="text-dark-text-secondary">Loading…</p></div>
+    return <div className="page"><p className="text-dark-text-secondary" role="status">Loading…</p></div>
   }
   if (isEdit && pet === null) {
     return (
@@ -94,17 +94,19 @@ export default function PetForm() {
   const breedOptions = sortOptions(customOptions?.breeds?.[formPet.species ?? ''] ?? [])
 
   return (
-    <div className="page">
+    <div className="page" aria-label={isEdit ? 'Edit pet' : 'Add pet'}>
       <header className="page-header" style={{ justifyContent: 'flex-start' }}>
-        <h1>{isEdit ? 'Edit Pet' : 'Add Pet'}</h1>
+        <h1 id="pet-form-title">{isEdit ? 'Edit Pet' : 'Add Pet'}</h1>
       </header>
-      <form onSubmit={handleSubmit} className="form">
-        <label>
+      <form onSubmit={handleSubmit} className="form" aria-labelledby="pet-form-title">
+        <label htmlFor="pet-form-name">
           Name *
           <input
+            id="pet-form-name"
             value={formPet.name ?? ''}
             onChange={(e) => setPet((p) => ({ ...p!, name: e.target.value }))}
             required
+            aria-required="true"
           />
         </label>
         <ComboBox
@@ -121,18 +123,20 @@ export default function PetForm() {
           onChange={(v) => setPet((p) => ({ ...p!, breed: v || undefined }))}
           placeholder={formPet.species ? `e.g. ${breedOptions[0]}...` : 'Select species first'}
         />
-        <label>
+        <label htmlFor="pet-form-dob">
           Date of birth
           <input
+            id="pet-form-dob"
             type="date"
             value={toDateOnly(formPet.date_of_birth) ?? ''}
             onChange={(e) => setPet((p) => ({ ...p!, date_of_birth: e.target.value || undefined }))}
           />
         </label>
         <div className="form-row-gender-fixed">
-          <label>
+          <label htmlFor="pet-form-gender">
             Gender
             <select
+              id="pet-form-gender"
               value={formPet.gender ?? ''}
               onChange={(e) => setPet((p) => ({ ...p!, gender: e.target.value || undefined }))}
             >
@@ -142,9 +146,10 @@ export default function PetForm() {
               <option value="other">Other</option>
             </select>
           </label>
-          <label>
+          <label htmlFor="pet-form-fixed">
             {t('pet.fixedLabel')}
             <select
+              id="pet-form-fixed"
               value={formPet.fixed === true ? 'yes' : 'no'}
               onChange={(e) => setPet((p) => ({ ...p!, fixed: e.target.value === 'yes' }))}
             >
@@ -153,38 +158,42 @@ export default function PetForm() {
             </select>
           </label>
         </div>
-        <label>
+        <label htmlFor="pet-form-color">
           Color
           <input
+            id="pet-form-color"
             value={formPet.color ?? ''}
             onChange={(e) => setPet((p) => ({ ...p!, color: e.target.value || undefined }))}
           />
         </label>
-        <label>
+        <label htmlFor="pet-form-microchip">
           Microchip ID
           <input
+            id="pet-form-microchip"
             value={formPet.microchip_id ?? ''}
             onChange={(e) => setPet((p) => ({ ...p!, microchip_id: e.target.value || undefined }))}
           />
         </label>
-        <label>
+        <label htmlFor="pet-form-microchip-company">
           Microchip company
           <input
+            id="pet-form-microchip-company"
             value={formPet.microchip_company ?? ''}
             onChange={(e) => setPet((p) => ({ ...p!, microchip_company: e.target.value || undefined }))}
             placeholder="e.g. HomeAgain, AKC"
           />
         </label>
-        <label>
+        <label htmlFor="pet-form-notes">
           Notes
           <textarea
+            id="pet-form-notes"
             value={formPet.notes ?? ''}
             onChange={(e) => setPet((p) => ({ ...p!, notes: e.target.value || undefined }))}
             rows={3}
           />
         </label>
         <div className="form-actions">
-          <button type="submit" className="btn btn-primary" disabled={saving}>
+          <button type="submit" className="btn btn-primary" disabled={saving} aria-busy={saving}>
             {saving ? 'Saving…' : isEdit ? 'Save' : 'Add Pet'}
           </button>
           <button type="button" className="btn btn-secondary" onClick={() => navigate(-1)}>
@@ -193,9 +202,9 @@ export default function PetForm() {
         </div>
       </form>
       {isEdit && id && (
-        <section className="section" style={{ marginTop: '2rem', borderTop: '1px solid var(--dark-border)', paddingTop: '1.5rem' }}>
-          <h2 className="text-lg font-bold text-dark-primary" style={{ marginBottom: '0.5rem' }}>Delete pet</h2>
-          <p className="muted" style={{ marginBottom: '1rem' }}>
+        <section className="section" style={{ marginTop: '2rem', borderTop: '1px solid var(--dark-border)', paddingTop: '1.5rem' }} aria-labelledby="pet-form-delete-heading" aria-describedby="pet-form-delete-desc">
+          <h2 id="pet-form-delete-heading" className="text-lg font-bold text-dark-primary" style={{ marginBottom: '0.5rem' }}>Delete pet</h2>
+          <p id="pet-form-delete-desc" className="muted" style={{ marginBottom: '1rem' }}>
             This will permanently delete this pet and all associated data: vaccinations, weight history, documents, photos, and all uploaded files. This cannot be undone.
           </p>
           <button
@@ -204,6 +213,7 @@ export default function PetForm() {
             style={{ background: 'var(--dark-danger, #dc2626)', color: '#fff', border: 'none' }}
             disabled={deleting}
             onClick={handleDelete}
+            aria-busy={deleting}
           >
             {deleting ? 'Deleting…' : 'Delete pet permanently'}
           </button>

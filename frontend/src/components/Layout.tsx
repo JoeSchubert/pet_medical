@@ -39,7 +39,7 @@ export default function Layout() {
 
   return (
     <div className="app-layout">
-      <nav className="nav">
+      <nav className="nav" role="navigation" aria-label="Main navigation">
         <div className="nav-left-slot">
           {isPetPage ? (
             <NavLink to="/" className="nav-back-btn">
@@ -110,8 +110,8 @@ export default function Layout() {
           >
             {user?.role === 'admin' ? t('nav.roleAdmin') : t('nav.roleUser')}
           </span>
-          <button type="button" className="btn" onClick={handleLogout} title={t('nav.logout')}>
-            <Icon icon="mdi:logout" width={20} height={20} />
+          <button type="button" className="btn" onClick={handleLogout} title={t('nav.logout')} aria-label={t('nav.logout')}>
+            <Icon icon="mdi:logout" width={20} height={20} aria-hidden />
             <span>{t('nav.logout')}</span>
           </button>
         </div>

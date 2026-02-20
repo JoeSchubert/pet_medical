@@ -34,47 +34,57 @@ export default function Login() {
   }
 
   return (
-    <div className="login-page">
+    <div className="login-page" role="main" aria-label="Sign in">
       <div className="login-wrap">
         <div className="login-card">
-          <h1>{t('nav.brand')}</h1>
-          <p className="tagline">Your pet's health portfolio</p>
-          <form onSubmit={handleSubmit}>
-            {error && <div className="error">{error}</div>}
-            <label>
+          <h1 id="login-title">{t('nav.brand')}</h1>
+          <p className="tagline" id="login-tagline">Your pet's health portfolio</p>
+          <form onSubmit={handleSubmit} aria-labelledby="login-title" aria-describedby={error ? 'login-error' : undefined}>
+            {error && (
+              <div id="login-error" className="error" role="alert" aria-live="assertive">
+                {error}
+              </div>
+            )}
+            <label htmlFor="login-email">
               {t('login.email')}
               <div className="input-wrap">
-                <Icon icon="mdi:email-outline" className="input-icon" width={24} height={24} />
+                <Icon icon="mdi:email-outline" className="input-icon" width={24} height={24} aria-hidden />
                 <input
+                  id="login-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
                   placeholder={t('login.email')}
                   required
+                  aria-invalid={!!error}
+                  aria-describedby={error ? 'login-error' : undefined}
                 />
               </div>
             </label>
-            <label>
+            <label htmlFor="login-password">
               {t('login.password')}
               <div className="input-wrap">
-                <Icon icon="mdi:lock-outline" className="input-icon" width={24} height={24} />
+                <Icon icon="mdi:lock-outline" className="input-icon" width={24} height={24} aria-hidden />
                 <input
+                  id="login-password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
                   placeholder={t('login.password')}
                   required
+                  aria-invalid={!!error}
+                  aria-describedby={error ? 'login-error' : undefined}
                 />
               </div>
             </label>
-            <button type="submit" disabled={submitting}>
+            <button id="login-submit" type="submit" disabled={submitting} aria-busy={submitting}>
               {submitting ? (
                 t('login.signingIn')
               ) : (
                 <>
-                  <Icon icon="mdi:login" width={20} height={20} />
+                  <Icon icon="mdi:login" width={20} height={20} aria-hidden />
                   {t('login.submit')}
                 </>
               )}

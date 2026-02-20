@@ -67,6 +67,10 @@ export default function ComboBox({
           onFocus={() => setOpen(true)}
           className="input searchable-select-input"
           autoComplete="off"
+          role="combobox"
+          aria-expanded={open}
+          aria-haspopup="listbox"
+          aria-autocomplete="list"
         />
         <span
           className="searchable-select-arrow combobox-arrow"
@@ -79,7 +83,7 @@ export default function ComboBox({
           ▼
         </span>
         {showList && (
-          <ul className="combobox-list" role="listbox">
+          <ul className="combobox-list" role="listbox" aria-label={label ?? 'Options'}>
             {filtered.map((opt) => (
               <li
                 key={opt}

@@ -43,6 +43,9 @@ func main() {
 	if err := db.SeedDefaultDropdownOptions(gormDB); err != nil {
 		log.Fatalf("seed defaults: %v", err)
 	}
+	if err := db.SeedDemoData(gormDB); err != nil {
+		log.Fatalf("seed demo: %v", err)
+	}
 
 	jwt := auth.NewJWT(cfg.JWTSecret, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
 	refreshStore := auth.NewRefreshStore(gormDB)

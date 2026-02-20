@@ -88,20 +88,23 @@ export default function PetDetail() {
   }
 
   return (
-    <div className="page">
+    <div className="page" aria-label={`Pet: ${pet.name}`}>
       <div className="pet-detail-layout">
-        <aside className="pet-detail-sidebar">
+        <aside className="pet-detail-sidebar" role="complementary" aria-label="Pet profile">
           <div className="pet-hero-card">
             <div className="pet-hero">
               <div className="pet-avatar large">
                 {pet.photo_url ? (
-                  <img src={pet.photo_url.startsWith('http') ? pet.photo_url : `${window.location.origin}${pet.photo_url}`} alt="" />
+                  <img
+                    src={pet.photo_url.startsWith('http') ? pet.photo_url : `${window.location.origin}${pet.photo_url}`}
+                    alt={pet.name ? `Photo of ${pet.name}` : ''}
+                  />
                 ) : (
-                  <span>{getSpeciesEmoji(pet.species)}</span>
+                  <span aria-hidden>{getSpeciesEmoji(pet.species)}</span>
                 )}
               </div>
               <div>
-                <h1>{pet.name}</h1>
+                <h1 id="pet-detail-name">{pet.name}</h1>
                 {pet.species && <p className="meta">{pet.species}</p>}
                 {pet.breed && <p className="meta">{pet.breed}</p>}
                 {pet.date_of_birth && <p className="meta">Born {formatDateOnly(pet.date_of_birth)}</p>}
@@ -113,57 +116,81 @@ export default function PetDetail() {
               </div>
             </div>
           </div>
-          <Link to={`/pets/${id}/edit`} className="btn btn-secondary" style={{ width: '100%', marginBottom: '1rem' }}>
-            <Icon icon="mdi:pencil" width={18} height={18} />
+          <Link to={`/pets/${id}/edit`} className="btn btn-secondary" style={{ width: '100%', marginBottom: '1rem' }} aria-label={`Edit ${pet.name}`}>
+            <Icon icon="mdi:pencil" width={18} height={18} aria-hidden />
             {t('pet.editPet')}
           </Link>
         </aside>
 
         <div className="pet-detail-main">
-          <div className="tabs-wrap">
+          <div className="tabs-wrap" role="tablist" aria-label="Pet data sections">
             <div className="tabs">
-              <button
-                className={activeTab === 'vaccinations' ? 'active' : ''}
-                onClick={() => setActiveTab('vaccinations')}
-              >
-                <Icon icon="mdi:needle" width={20} height={20} />
-                {t('pet.vaccinations')}
-              </button>
-              <button
-                className={activeTab === 'weights' ? 'active' : ''}
-                onClick={() => setActiveTab('weights')}
-              >
-                <Icon icon="mdi:scale-balance" width={20} height={20} />
-                {t('pet.weight')}
-              </button>
-              <button
-                className={activeTab === 'documents' ? 'active' : ''}
-                onClick={() => setActiveTab('documents')}
-              >
-                <Icon icon="mdi:file-document-multiple" width={20} height={20} />
-                {t('pet.documents')}
-              </button>
-              <button
-                className={activeTab === 'photos' ? 'active' : ''}
-                onClick={() => setActiveTab('photos')}
-              >
-                <Icon icon="mdi:image-multiple" width={20} height={20} />
-                {t('pet.photos')}
-              </button>
+            <button
+              role="tab"
+              aria-selected={activeTab === 'vaccinations'}
+              aria-controls="pet-tab-vaccinations"
+              id="pet-tab-btn-vaccinations"
+              className={activeTab === 'vaccinations' ? 'active' : ''}
+              onClick={() => setActiveTab('vaccinations')}
+            >
+              <Icon icon="mdi:needle" width={20} height={20} aria-hidden />
+              {t('pet.vaccinations')}
+            </button>
+            <button
+              role="tab"
+              aria-selected={activeTab === 'weights'}
+              aria-controls="pet-tab-weights"
+              id="pet-tab-btn-weights"
+              className={activeTab === 'weights' ? 'active' : ''}
+              onClick={() => setActiveTab('weights')}
+            >
+              <Icon icon="mdi:scale-balance" width={20} height={20} aria-hidden />
+              {t('pet.weight')}
+            </button>
+            <button
+              role="tab"
+              aria-selected={activeTab === 'documents'}
+              aria-controls="pet-tab-documents"
+              id="pet-tab-btn-documents"
+              className={activeTab === 'documents' ? 'active' : ''}
+              onClick={() => setActiveTab('documents')}
+            >
+              <Icon icon="mdi:file-document-multiple" width={20} height={20} aria-hidden />
+              {t('pet.documents')}
+            </button>
+            <button
+              role="tab"
+              aria-selected={activeTab === 'photos'}
+              aria-controls="pet-tab-photos"
+              id="pet-tab-btn-photos"
+              className={activeTab === 'photos' ? 'active' : ''}
+              onClick={() => setActiveTab('photos')}
+            >
+              <Icon icon="mdi:image-multiple" width={20} height={20} aria-hidden />
+              {t('pet.photos')}
+            </button>
             </div>
           </div>
 
           {activeTab === 'vaccinations' && (
-            <VaccinationsSection petId={id!} pet={pet} list={vaccinations} currency={user?.currency ?? 'USD'} onUpdate={load} />
+            <div id="pet-tab-vaccinations" role="tabpanel" aria-labelledby="pet-tab-btn-vaccinations" tabIndex={0}>
+              <VaccinationsSection petId={id!} pet={pet} list={vaccinations} currency={user?.currency ?? 'USD'} onUpdate={load} />
+            </div>
           )}
           {activeTab === 'weights' && (
-            <WeightsSection petId={id!} list={weights} weightUnit={user?.weight_unit ?? 'lbs'} onUpdate={load} />
+            <div id="pet-tab-weights" role="tabpanel" aria-labelledby="pet-tab-btn-weights" tabIndex={0}>
+              <WeightsSection petId={id!} list={weights} weightUnit={user?.weight_unit ?? 'lbs'} onUpdate={load} />
+            </div>
           )}
           {activeTab === 'documents' && (
-            <DocumentsSection petId={id!} onUpdate={load} />
+            <div id="pet-tab-documents" role="tabpanel" aria-labelledby="pet-tab-btn-documents" tabIndex={0}>
+              <DocumentsSection petId={id!} onUpdate={load} />
+            </div>
           )}
           {activeTab === 'photos' && (
-            <PhotosSection petId={id!} pet={pet} photos={photos} onUpdate={load} />
+            <div id="pet-tab-photos" role="tabpanel" aria-labelledby="pet-tab-btn-photos" tabIndex={0}>
+              <PhotosSection petId={id!} pet={pet} photos={photos} onUpdate={load} />
+            </div>
           )}
         </div>
       </div>
